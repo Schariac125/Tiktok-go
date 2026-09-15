@@ -9,6 +9,7 @@ import (
 	"tiktok-go/app/user/rpc/model"
 	"tiktok-go/app/user/rpc/user"
 	"tiktok-go/pkg/errno"
+	"tiktok-go/pkg/mfa"
 	"tiktok-go/pkg/utils"
 
 	"github.com/zeromicro/go-zero/core/logx"
@@ -47,12 +48,14 @@ func (l *LoginLogic) Login(in *user.LoginReq) (*user.LoginResp, error) {
 		return &user.LoginResp{Base: toStatus(errno.ErrPasswordWrong)}, nil
 	}
 
-	// 已启用 MFA 的用户必须携带验证码（TOTP 校验在 MFA 绑定实现后接入）
+	// 已启用 MFA 的用户必须携带验证码并校验 TOTP
 	if u.MfaEnabled == 1 {
 		if in.Code == "" {
 			return &user.LoginResp{Base: toStatus(errno.ErrMfaCodeNeeded)}, nil
 		}
-		// todo: 校验 TOTP 验证码
+		if !u.MfaSecret.Valid || !mfa.Validate(u.MfaSecret.String, in.Code) {
+			return &user.LoginResp{Base: toStatus(errno.ErrMfaCodeWrong)}, nil
+		}
 	}
 
 	// 签发 token 对

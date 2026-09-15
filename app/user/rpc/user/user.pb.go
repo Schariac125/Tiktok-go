@@ -593,6 +593,7 @@ func (x *UploadAvatarResp) GetBase() *Status {
 
 type GetMFAQrcodeReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // 用户 id（网关从登录态注入）
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -625,6 +626,13 @@ func (x *GetMFAQrcodeReq) ProtoReflect() protoreflect.Message {
 // Deprecated: Use GetMFAQrcodeReq.ProtoReflect.Descriptor instead.
 func (*GetMFAQrcodeReq) Descriptor() ([]byte, []int) {
 	return file_user_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *GetMFAQrcodeReq) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
 }
 
 type GetMFAQrcodeResp struct {
@@ -689,8 +697,9 @@ func (x *GetMFAQrcodeResp) GetQrcode() string {
 
 type BindMFAReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`     // 验证码
-	Secret        string                 `protobuf:"bytes,2,opt,name=secret,proto3" json:"secret,omitempty"` // 密钥
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // 用户 id（网关从登录态注入）
+	Code          string                 `protobuf:"bytes,2,opt,name=code,proto3" json:"code,omitempty"`                    // 验证码
+	Secret        string                 `protobuf:"bytes,3,opt,name=secret,proto3" json:"secret,omitempty"`                // 密钥
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -723,6 +732,13 @@ func (x *BindMFAReq) ProtoReflect() protoreflect.Message {
 // Deprecated: Use BindMFAReq.ProtoReflect.Descriptor instead.
 func (*BindMFAReq) Descriptor() ([]byte, []int) {
 	return file_user_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *BindMFAReq) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
 }
 
 func (x *BindMFAReq) GetCode() string {
@@ -828,16 +844,18 @@ const file_user_proto_rawDesc = "" +
 	"\x06avatar\x18\x02 \x01(\fR\x06avatar\x12\x1a\n" +
 	"\bfilename\x18\x03 \x01(\tR\bfilename\"4\n" +
 	"\x10UploadAvatarResp\x12 \n" +
-	"\x04base\x18\x01 \x01(\v2\f.user.StatusR\x04base\"\x11\n" +
-	"\x0fGetMFAQrcodeReq\"d\n" +
+	"\x04base\x18\x01 \x01(\v2\f.user.StatusR\x04base\"*\n" +
+	"\x0fGetMFAQrcodeReq\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\"d\n" +
 	"\x10GetMFAQrcodeResp\x12 \n" +
 	"\x04base\x18\x01 \x01(\v2\f.user.StatusR\x04base\x12\x16\n" +
 	"\x06secret\x18\x02 \x01(\tR\x06secret\x12\x16\n" +
-	"\x06qrcode\x18\x03 \x01(\tR\x06qrcode\"8\n" +
+	"\x06qrcode\x18\x03 \x01(\tR\x06qrcode\"Q\n" +
 	"\n" +
-	"BindMFAReq\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\x12\x16\n" +
-	"\x06secret\x18\x02 \x01(\tR\x06secret\"/\n" +
+	"BindMFAReq\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x12\n" +
+	"\x04code\x18\x02 \x01(\tR\x04code\x12\x16\n" +
+	"\x06secret\x18\x03 \x01(\tR\x06secret\"/\n" +
 	"\vBindMFAResp\x12 \n" +
 	"\x04base\x18\x01 \x01(\v2\f.user.StatusR\x04base2\xd4\x02\n" +
 	"\vUserService\x121\n" +

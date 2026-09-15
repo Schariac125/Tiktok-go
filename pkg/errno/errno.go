@@ -38,6 +38,7 @@ var (
 	ErrUnauthorized  = &Errno{Code: 401, Msg: "未登录或凭证已失效"}
 	ErrMfaCodeNeeded = &Errno{Code: 401, Msg: "需要 MFA 验证码"}
 	ErrMfaCodeWrong  = &Errno{Code: 401, Msg: "MFA 验证码错误"}
+	ErrMfaBound      = &Errno{Code: 400, Msg: "MFA 已绑定，请勿重复绑定"}
 	ErrEmptyFile     = &Errno{Code: 400, Msg: "上传文件为空"}
 	ErrFileTooLarge  = &Errno{Code: 400, Msg: "文件大小超出限制"}
 	ErrFileType      = &Errno{Code: 400, Msg: "不支持的文件类型"}

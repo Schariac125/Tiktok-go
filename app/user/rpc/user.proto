@@ -75,6 +75,7 @@ message UploadAvatarResp {
 // ------- MFA 二维码 -------
 
 message GetMFAQrcodeReq {
+  int64 user_id = 1; // 用户 id（网关从登录态注入）
 }
 
 message GetMFAQrcodeResp {
@@ -86,8 +87,9 @@ message GetMFAQrcodeResp {
 // ------- 绑定 MFA -------
 
 message BindMFAReq {
-  string code = 1;   // 验证码
-  string secret = 2; // 密钥
+  int64 user_id = 1; // 用户 id（网关从登录态注入）
+  string code = 2;   // 验证码
+  string secret = 3; // 密钥
 }
 
 message BindMFAResp {
