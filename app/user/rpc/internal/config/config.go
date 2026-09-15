@@ -5,6 +5,7 @@ import (
 
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/zrpc"
+	"tiktok-go/pkg/storage"
 )
 
 type Config struct {
@@ -18,4 +19,5 @@ type Config struct {
 		AccessExpire  time.Duration // access token 有效期
 		RefreshExpire time.Duration // refresh token 有效期
 	}
+	OSS storage.OSSConfig // 头像等对象存储
 }

@@ -63,7 +63,9 @@ message GetUserInfoResp {
 // ------- 上传头像 -------
 
 message UploadAvatarReq {
-  bytes avatar = 1; // 用户的头像源文件
+  int64 user_id = 1;   // 用户 id（网关从登录态注入）
+  bytes avatar = 2;    // 用户的头像源文件
+  string filename = 3; // 原始文件名（用于判断类型）
 }
 
 message UploadAvatarResp {

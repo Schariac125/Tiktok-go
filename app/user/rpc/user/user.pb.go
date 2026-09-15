@@ -489,7 +489,9 @@ func (x *GetUserInfoResp) GetData() *User {
 
 type UploadAvatarReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Avatar        []byte                 `protobuf:"bytes,1,opt,name=avatar,proto3" json:"avatar,omitempty"` // 用户的头像源文件
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"` // 用户 id（网关从登录态注入）
+	Avatar        []byte                 `protobuf:"bytes,2,opt,name=avatar,proto3" json:"avatar,omitempty"`                // 用户的头像源文件
+	Filename      string                 `protobuf:"bytes,3,opt,name=filename,proto3" json:"filename,omitempty"`            // 原始文件名（用于判断类型）
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -524,11 +526,25 @@ func (*UploadAvatarReq) Descriptor() ([]byte, []int) {
 	return file_user_proto_rawDescGZIP(), []int{8}
 }
 
+func (x *UploadAvatarReq) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
 func (x *UploadAvatarReq) GetAvatar() []byte {
 	if x != nil {
 		return x.Avatar
 	}
 	return nil
+}
+
+func (x *UploadAvatarReq) GetFilename() string {
+	if x != nil {
+		return x.Filename
+	}
+	return ""
 }
 
 type UploadAvatarResp struct {
@@ -806,9 +822,11 @@ const file_user_proto_rawDesc = "" +
 	"\x0fGetUserInfoResp\x12 \n" +
 	"\x04base\x18\x01 \x01(\v2\f.user.StatusR\x04base\x12\x1e\n" +
 	"\x04data\x18\x02 \x01(\v2\n" +
-	".user.UserR\x04data\")\n" +
-	"\x0fUploadAvatarReq\x12\x16\n" +
-	"\x06avatar\x18\x01 \x01(\fR\x06avatar\"4\n" +
+	".user.UserR\x04data\"^\n" +
+	"\x0fUploadAvatarReq\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x16\n" +
+	"\x06avatar\x18\x02 \x01(\fR\x06avatar\x12\x1a\n" +
+	"\bfilename\x18\x03 \x01(\tR\bfilename\"4\n" +
 	"\x10UploadAvatarResp\x12 \n" +
 	"\x04base\x18\x01 \x01(\v2\f.user.StatusR\x04base\"\x11\n" +
 	"\x0fGetMFAQrcodeReq\"d\n" +
