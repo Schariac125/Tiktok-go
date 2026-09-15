@@ -1,27 +1,27 @@
 // Code scaffolded by goctl. Safe to edit.
 // goctl 1.10.2
 
-package handler
+package user
 
 import (
 	"net/http"
 
 	"github.com/zeromicro/go-zero/rest/httpx"
-		userlogic "tiktok-go/app/gateway/api/internal/logic/user"
+		"tiktok-go/app/gateway/api/internal/logic/user"
 	"tiktok-go/app/gateway/api/internal/svc"
 	"tiktok-go/app/gateway/api/internal/types"
 )
 
-func loginHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+func BindMFAHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.LoginReq
+		var req types.BindMFAReq
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
-		l := userlogic.NewLoginLogic(r.Context(), svcCtx)
-		resp, err := l.Login(&req)
+		l := user.NewBindMFALogic(r.Context(), svcCtx)
+		resp, err := l.BindMFA(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

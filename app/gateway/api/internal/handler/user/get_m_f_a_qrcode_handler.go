@@ -1,19 +1,19 @@
 // Code scaffolded by goctl. Safe to edit.
 // goctl 1.10.2
 
-package handler
+package user
 
 import (
 	"net/http"
 
 	"github.com/zeromicro/go-zero/rest/httpx"
-		userlogic "tiktok-go/app/gateway/api/internal/logic/user"
+		"tiktok-go/app/gateway/api/internal/logic/user"
 	"tiktok-go/app/gateway/api/internal/svc"
 )
 
-func getMFAQrcodeHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+func GetMFAQrcodeHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		l := userlogic.NewGetMFAQrcodeLogic(r.Context(), svcCtx)
+		l := user.NewGetMFAQrcodeLogic(r.Context(), svcCtx)
 		resp, err := l.GetMFAQrcode()
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)

@@ -6,6 +6,7 @@ package handler
 import (
 	"net/http"
 
+	userhandler "tiktok-go/app/gateway/api/internal/handler/user"
 	"tiktok-go/app/gateway/api/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -17,12 +18,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			{
 				Method:  http.MethodPost,
 				Path:    "/login",
-				Handler: loginHandler(serverCtx),
+				Handler: userhandler.LoginHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodPost,
 				Path:    "/register",
-				Handler: registerHandler(serverCtx),
+				Handler: userhandler.RegisterHandler(serverCtx),
 			},
 		},
 		rest.WithPrefix("/user"),
@@ -35,12 +36,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				{
 					Method:  http.MethodPut,
 					Path:    "/avatar/upload",
-					Handler: uploadAvatarHandler(serverCtx),
+					Handler: userhandler.UploadAvatarHandler(serverCtx),
 				},
 				{
 					Method:  http.MethodGet,
 					Path:    "/info",
-					Handler: getUserInfoHandler(serverCtx),
+					Handler: userhandler.GetUserInfoHandler(serverCtx),
 				},
 			}...,
 		),
@@ -54,12 +55,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				{
 					Method:  http.MethodPost,
 					Path:    "/bind",
-					Handler: bindMFAHandler(serverCtx),
+					Handler: userhandler.BindMFAHandler(serverCtx),
 				},
 				{
 					Method:  http.MethodGet,
 					Path:    "/qrcode",
-					Handler: getMFAQrcodeHandler(serverCtx),
+					Handler: userhandler.GetMFAQrcodeHandler(serverCtx),
 				},
 			}...,
 		),
