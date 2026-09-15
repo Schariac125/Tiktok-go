@@ -22,11 +22,6 @@ func (e *Errno) WithMsg(msg string) *Errno {
 	return &Errno{Code: e.Code, Msg: msg}
 }
 
-// Status 返回 code/msg 二元组，供各层构造响应体的 base 字段使用
-func (e *Errno) Status() (int32, string) {
-	return e.Code, e.Msg
-}
-
 // 通用
 var (
 	OK = &Errno{Code: 0, Msg: "成功"}

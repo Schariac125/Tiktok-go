@@ -45,6 +45,8 @@ message LoginReq {
 message LoginResp {
   Status base = 1;
   User data = 2;
+  string access_token = 3;  // 访问令牌
+  string refresh_token = 4; // 刷新令牌
 }
 
 // ------- 用户信息 -------

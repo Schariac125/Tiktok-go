@@ -33,8 +33,10 @@ type LoginReq struct {
 }
 
 type LoginResp struct {
-	Base Status `json:"base"` // 响应状态
-	Data User   `json:"data"` // 用户信息
+	Base         Status `json:"base"`          // 响应状态
+	Data         User   `json:"data"`          // 用户信息
+	AccessToken  string `json:"access_token"`  // 访问令牌
+	RefreshToken string `json:"refresh_token"` // 刷新令牌
 }
 
 type MFAQrcode struct {

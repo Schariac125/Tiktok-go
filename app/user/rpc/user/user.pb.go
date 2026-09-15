@@ -327,6 +327,8 @@ type LoginResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Base          *Status                `protobuf:"bytes,1,opt,name=base,proto3" json:"base,omitempty"`
 	Data          *User                  `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+	AccessToken   string                 `protobuf:"bytes,3,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`    // 访问令牌
+	RefreshToken  string                 `protobuf:"bytes,4,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"` // 刷新令牌
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -373,6 +375,20 @@ func (x *LoginResp) GetData() *User {
 		return x.Data
 	}
 	return nil
+}
+
+func (x *LoginResp) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
+func (x *LoginResp) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
 }
 
 type GetUserInfoReq struct {
@@ -778,11 +794,13 @@ const file_user_proto_rawDesc = "" +
 	"\bLoginReq\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\x12\x12\n" +
-	"\x04code\x18\x03 \x01(\tR\x04code\"M\n" +
+	"\x04code\x18\x03 \x01(\tR\x04code\"\x95\x01\n" +
 	"\tLoginResp\x12 \n" +
 	"\x04base\x18\x01 \x01(\v2\f.user.StatusR\x04base\x12\x1e\n" +
 	"\x04data\x18\x02 \x01(\v2\n" +
-	".user.UserR\x04data\")\n" +
+	".user.UserR\x04data\x12!\n" +
+	"\faccess_token\x18\x03 \x01(\tR\vaccessToken\x12#\n" +
+	"\rrefresh_token\x18\x04 \x01(\tR\frefreshToken\")\n" +
 	"\x0eGetUserInfoReq\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\"S\n" +
 	"\x0fGetUserInfoResp\x12 \n" +

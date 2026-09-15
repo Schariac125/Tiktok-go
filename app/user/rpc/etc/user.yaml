@@ -12,3 +12,9 @@ MySQL:
 CacheRedis:
   - Host: 127.0.0.1:6379
     Type: node
+
+# token 签发
+JWT:
+  AccessSecret: "tiktok-go-dev-secret-change-me"
+  AccessExpire: 2h
+  RefreshExpire: 168h
