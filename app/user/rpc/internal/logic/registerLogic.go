@@ -2,9 +2,14 @@ package logic
 
 import (
 	"context"
+	"errors"
+	"strings"
 
 	"tiktok-go/app/user/rpc/internal/svc"
+	"tiktok-go/app/user/rpc/model"
 	"tiktok-go/app/user/rpc/user"
+	"tiktok-go/pkg/errno"
+	"tiktok-go/pkg/utils"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -25,7 +30,36 @@ func NewRegisterLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Register
 
 // 注册 POST /user/register
 func (l *RegisterLogic) Register(in *user.RegisterReq) (*user.RegisterResp, error) {
-	// todo: add your logic here and delete this line
+	username := strings.TrimSpace(in.Username)
+	password := strings.TrimSpace(in.Password)
 
-	return &user.RegisterResp{}, nil
+	// 参数校验
+	if !utils.ValidUsername(username) {
+		return &user.RegisterResp{Base: &user.Status{Code: errno.ErrUsernameLen.Code, Msg: errno.ErrUsernameLen.Msg}}, nil
+	}
+	if !utils.ValidPassword(password) {
+		return &user.RegisterResp{Base: &user.Status{Code: errno.ErrPasswordLen.Code, Msg: errno.ErrPasswordLen.Msg}}, nil
+	}
+
+	// 用户名查重（软删除的记录同样占用用户名，防止复活）
+	if _, err := l.svcCtx.UserModel.FindOneByUsername(l.ctx, username); err == nil {
+		return &user.RegisterResp{Base: &user.Status{Code: errno.ErrUsernameExist.Code, Msg: errno.ErrUsernameExist.Msg}}, nil
+	} else if !errors.Is(err, model.ErrNotFound) {
+		return nil, err
+	}
+
+	// 密码加密后落库
+	hashed, err := utils.HashPassword(password)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := l.svcCtx.UserModel.Insert(l.ctx, &model.User{
+		Username: username,
+		Password: hashed,
+	}); err != nil {
+		// 并发下撞唯一索引同样视为用户名已存在
+		return &user.RegisterResp{Base: &user.Status{Code: errno.ErrUsernameExist.Code, Msg: errno.ErrUsernameExist.Msg}}, nil
+	}
+
+	return &user.RegisterResp{Base: &user.Status{Code: errno.OK.Code, Msg: errno.OK.Msg}}, nil
 }
