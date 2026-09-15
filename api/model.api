@@ -1,0 +1,26 @@
+syntax = "v1"
+
+// 数据模型，对应《默认模块.md》的数据模型部分
+
+// 响应状态
+type Status {
+	Code int32  `json:"code"` // 状态码
+	Msg  string `json:"msg"`  // 提示信息
+}
+
+// 用户
+type User {
+	Id        int64  `json:"id"`         // ID 编号
+	Username  string `json:"username"`   // 用户名
+	Password  string `json:"password"`   // 密码
+	AvatarUrl string `json:"avatar_url"` // 头像链接地址
+	CreateAt  string `json:"create_at"`  // 创建时间
+	UpdatedAt string `json:"updated_at"` // 更新时间
+	DeleteAt  string `json:"delete_at"`  // 软删除时间
+}
+
+// MFA 二维码
+type MFAQrcode {
+	Secret string `json:"secret"` // mfa 密钥
+	Qrcode string `json:"qrcode"` // base64 编码后的 qrcode
+}

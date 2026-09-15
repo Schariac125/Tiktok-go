@@ -1,0 +1,70 @@
+syntax = "v1"
+
+import "../model.api"
+
+// 用户模块 —— 需要登录鉴权的路由
+// 请求头携带 Access-Token、Refresh-Token，由 AuthMiddleware 统一校验
+
+type (
+	// 用户信息请求
+	GetUserInfoReq {
+		UserId int64 `json:"user_id,optional"` // 用户 id
+	}
+
+	// 用户信息响应
+	GetUserInfoResp {
+		Base Status `json:"base"` // 响应状态
+		Data  User  `json:"data"` // 用户信息
+	}
+
+	// 上传头像响应
+	UploadAvatarResp {
+		Base Status `json:"base"` // 响应状态
+	}
+
+	// 获取 MFA 二维码响应
+	GetMFAQrcodeResp {
+		Base Status   `json:"base"` // 响应状态
+		Data  MFAQrcode `json:"data"` // MFA 二维码
+	}
+
+	// 绑定 MFA 请求
+	BindMFAReq {
+		Code   string `json:"code,optional"`   // 验证码
+		Secret string `json:"secret,optional"` // 密钥
+	}
+
+	// 绑定 MFA 响应
+	BindMFAResp {
+		Base Status `json:"base"` // 响应状态
+	}
+)
+
+@server (
+	prefix: /user
+	middleware: AuthMiddleware
+)
+service user {
+	// 用户信息，只允许用户获取自己的
+	@handler getUserInfo
+	get /info (GetUserInfoReq) returns (GetUserInfoResp)
+
+	// 上传头像，头像应该要采用云端存储
+	// 头像源文件以 multipart/form-data 上传，字段名 avatar，在 handler 中解析
+	@handler uploadAvatar
+	put /avatar/upload returns (UploadAvatarResp)
+}
+
+@server (
+	prefix: /auth/mfa
+	middleware: AuthMiddleware
+)
+service user {
+	// 获取绑定 MFA 时所需的二维码
+	@handler getMFAQrcode
+	get /qrcode returns (GetMFAQrcodeResp)
+
+	// 绑定 MFA
+	@handler bindMFA
+	post /bind (BindMFAReq) returns (BindMFAResp)
+}

@@ -1,0 +1,44 @@
+syntax = "v1"
+
+import "../model.api"
+
+// 用户模块 —— 无需登录鉴权的路由
+
+type (
+	// 注册请求
+	RegisterReq {
+		Username string `json:"username"` // 用户名
+		Password string `json:"password"` // 密码
+	}
+
+	// 注册响应
+	RegisterResp {
+		Base Status `json:"base"` // 响应状态
+	}
+
+	// 登录请求
+	LoginReq {
+		Username string `json:"username"`      // 用户名
+		Password string `json:"password"`      // 密码
+		Code     string `json:"code,optional"` // 如果开启 2fa 需要验证码
+	}
+
+	// 登录响应
+	LoginResp {
+		Base Status `json:"base"` // 响应状态
+		Data  User  `json:"data"` // 用户信息
+	}
+)
+
+@server (
+	prefix: /user
+)
+service user {
+	// 注册
+	@handler register
+	post /register (RegisterReq) returns (RegisterResp)
+
+	// 登录
+	@handler login
+	post /login (LoginReq) returns (LoginResp)
+}
