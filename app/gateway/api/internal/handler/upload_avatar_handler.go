@@ -7,13 +7,13 @@ import (
 	"net/http"
 
 	"github.com/zeromicro/go-zero/rest/httpx"
-	"tiktok-go/app/gateway/api/internal/logic"
+		userlogic "tiktok-go/app/gateway/api/internal/logic/user"
 	"tiktok-go/app/gateway/api/internal/svc"
 )
 
 func uploadAvatarHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		l := logic.NewUploadAvatarLogic(r.Context(), svcCtx)
+		l := userlogic.NewUploadAvatarLogic(r.Context(), svcCtx)
 		resp, err := l.UploadAvatar()
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)

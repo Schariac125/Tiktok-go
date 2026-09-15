@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/zeromicro/go-zero/rest/httpx"
-	"tiktok-go/app/gateway/api/internal/logic"
+		userlogic "tiktok-go/app/gateway/api/internal/logic/user"
 	"tiktok-go/app/gateway/api/internal/svc"
 	"tiktok-go/app/gateway/api/internal/types"
 )
@@ -20,7 +20,7 @@ func registerHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 
-		l := logic.NewRegisterLogic(r.Context(), svcCtx)
+		l := userlogic.NewRegisterLogic(r.Context(), svcCtx)
 		resp, err := l.Register(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
