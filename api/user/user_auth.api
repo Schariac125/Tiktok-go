@@ -44,7 +44,7 @@ type (
 	prefix: /user
 	middleware: AuthMiddleware
 )
-service user {
+service gateway {
 	// 用户信息，只允许用户获取自己的
 	@handler getUserInfo
 	get /info (GetUserInfoReq) returns (GetUserInfoResp)
@@ -59,7 +59,7 @@ service user {
 	prefix: /auth/mfa
 	middleware: AuthMiddleware
 )
-service user {
+service gateway {
 	// 获取绑定 MFA 时所需的二维码
 	@handler getMFAQrcode
 	get /qrcode returns (GetMFAQrcodeResp)

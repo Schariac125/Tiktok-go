@@ -7,3 +7,8 @@ UserRpc:
     Hosts:
       - 127.0.0.1:2379
     Key: user.rpc
+
+# 与 user.rpc 的 JWT.AccessSecret 保持一致
+JWT:
+  AccessSecret: "tiktok-go-dev-secret-change-me"
+  AccessExpire: 2h

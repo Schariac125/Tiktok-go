@@ -1,6 +1,3 @@
-// Code scaffolded by goctl. Safe to edit.
-// goctl 1.10.2
-
 package svc
 
 import (
@@ -9,18 +6,22 @@ import (
 	"tiktok-go/app/gateway/api/internal/config"
 	"tiktok-go/app/gateway/api/internal/middleware"
 	"tiktok-go/app/user/rpc/userservice"
+	"tiktok-go/pkg/jwt"
 )
 
 type ServiceContext struct {
 	Config         config.Config
 	AuthMiddleware rest.Middleware
 	UserRpc        userservice.UserService
+	Signer         *jwt.Signer
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
+	signer := jwt.NewSigner(c.JWT.AccessSecret, c.JWT.AccessExpire, 0)
 	return &ServiceContext{
 		Config:         c,
-		AuthMiddleware: middleware.NewAuthMiddleware().Handle,
+		AuthMiddleware: middleware.NewAuthMiddleware(signer).Handle,
 		UserRpc:        userservice.NewUserService(zrpc.MustNewClient(c.UserRpc)),
+		Signer:         signer,
 	}
 }

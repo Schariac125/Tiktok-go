@@ -35,7 +35,7 @@ type (
 @server (
 	prefix: /user
 )
-service user {
+service gateway {
 	// 注册
 	@handler register
 	post /register (RegisterReq) returns (RegisterResp)
