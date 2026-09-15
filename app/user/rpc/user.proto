@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "./user";
+
+// ------- 数据模型 -------
+
+// 响应状态
+message Status {
+  int32 code = 1; // 状态码
+  string msg = 2; // 提示信息
+}
+
+// 用户信息
+message User {
+  int64 id = 1;          // ID 编号
+  string username = 2;   // 用户名
+  string password = 3;   // 密码
+  string avatar_url = 4; // 头像链接地址
+  string create_at = 5;  // 创建时间
+  string updated_at = 6; // 更新时间
+  string delete_at = 7;  // 软删除时间
+}
+
+// ------- 注册 -------
+
+message RegisterReq {
+  string username = 1; // 用户名
+  string password = 2; // 密码
+}
+
+message RegisterResp {
+  Status base = 1;
+}
+
+// ------- 登录 -------
+
+message LoginReq {
+  string username = 1; // 用户名
+  string password = 2; // 密码
+  string code = 3;     // 如果开启 2fa 需要验证码
+}
+
+message LoginResp {
+  Status base = 1;
+  User data = 2;
+}
+
+// ------- 用户信息 -------
+
+message GetUserInfoReq {
+  int64 user_id = 1; // 用户 id
+}
+
+message GetUserInfoResp {
+  Status base = 1;
+  User data = 2;
+}
+
+// ------- 上传头像 -------
+
+message UploadAvatarReq {
+  bytes avatar = 1; // 用户的头像源文件
+}
+
+message UploadAvatarResp {
+  Status base = 1;
+}
+
+// ------- MFA 二维码 -------
+
+message GetMFAQrcodeReq {
+}
+
+message GetMFAQrcodeResp {
+  Status base = 1;
+  string secret = 2; // mfa 密钥
+  string qrcode = 3; // base64 编码后的 qrcode
+}
+
+// ------- 绑定 MFA -------
+
+message BindMFAReq {
+  string code = 1;   // 验证码
+  string secret = 2; // 密钥
+}
+
+message BindMFAResp {
+  Status base = 1;
+}
+
+service UserService {
+  // 注册 POST /user/register
+  rpc Register(RegisterReq) returns (RegisterResp);
+  // 登录 POST /user/login
+  rpc Login(LoginReq) returns (LoginResp);
+  // 用户信息，只允许用户获取自己的 GET /user/info
+  rpc GetUserInfo(GetUserInfoReq) returns (GetUserInfoResp);
+  // 上传头像，头像应该要采用云端存储 PUT /user/avatar/upload
+  rpc UploadAvatar(UploadAvatarReq) returns (UploadAvatarResp);
+  // 获取绑定 MFA 时所需的二维码 GET /auth/mfa/qrcode
+  rpc GetMFAQrcode(GetMFAQrcodeReq) returns (GetMFAQrcodeResp);
+  // 绑定 MFA POST /auth/mfa/bind
+  rpc BindMFA(BindMFAReq) returns (BindMFAResp);
+}
