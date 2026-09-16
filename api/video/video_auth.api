@@ -22,18 +22,30 @@ type (
 	}
 )
 
+// 投稿要上传大文件：go-zero 的请求体上限默认 1MB、处理超时默认 3s，
+// 都由这里按路由放开，不影响其他接口。
+@server (
+	prefix:     /video
+	group:      video
+	middleware: AuthMiddleware
+	timeout:    600s // 10 分钟，留给大文件上传
+	maxBytes:   536870912 // 512MB
+)
+service gateway {
+	// 视频投稿
+	// 以 multipart/form-data 上传，字段 data 为视频原始文件（必填），
+	// cover 为封面文件（可省略），title、description 为表单字段，在 handler 中解析。
+	// 视频与封面由网关流式直传 OSS，rpc 只负责落库。
+	@handler publishVideo
+	post /publish returns (PublishVideoResp)
+}
+
 @server (
 	prefix:     /video
 	group:      video
 	middleware: AuthMiddleware
 )
 service gateway {
-	// 视频投稿
-	// 以 multipart/form-data 上传，字段 data 为视频原始文件（必填），
-	// cover 为封面文件（可省略），title、description 为表单字段，在 handler 中解析
-	@handler publishVideo
-	post /publish returns (PublishVideoResp)
-
 	// 删除视频
 	@handler deleteVideo
 	delete /delete (DeleteVideoReq) returns (DeleteVideoResp)

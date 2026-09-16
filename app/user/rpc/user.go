@@ -18,6 +18,9 @@ import (
 
 var configFile = flag.String("f", "etc/user.yaml", "the config file")
 
+// maxUploadBytes gRPC 单条消息上限，需容纳头像文件（业务上限 5MB）
+const maxUploadBytes = 8 << 20 // 8MB
+
 func main() {
 	flag.Parse()
 
@@ -32,6 +35,8 @@ func main() {
 			reflection.Register(grpcServer)
 		}
 	})
+	// 上传头像经 gRPC 传文件内容，gRPC 默认只收 4MB，按头像业务上限放开
+	s.AddOptions(grpc.MaxRecvMsgSize(maxUploadBytes))
 	defer s.Stop()
 
 	fmt.Printf("Starting rpc server at %s...\n", c.ListenOn)

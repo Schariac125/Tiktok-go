@@ -5,8 +5,11 @@ package video
 
 import (
 	"context"
-	"io"
+	"fmt"
 	"mime/multipart"
+	"path/filepath"
+	"strings"
+	"time"
 
 	"tiktok-go/app/gateway/api/internal/svc"
 	"tiktok-go/app/gateway/api/internal/types"
@@ -16,6 +19,31 @@ import (
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
+
+// 投稿文件的大小限制
+const (
+	videoMaxSize = 500 << 20 // 视频 500MB
+	coverMaxSize = 5 << 20   // 封面 5MB
+)
+
+// 允许的视频格式
+var allowedVideoExts = map[string]string{
+	".mp4":  "video/mp4",
+	".mov":  "video/quicktime",
+	".avi":  "video/x-msvideo",
+	".mkv":  "video/x-matroska",
+	".webm": "video/webm",
+	".flv":  "video/x-flv",
+}
+
+// 允许的封面格式
+var allowedCoverExts = map[string]string{
+	".jpg":  "image/jpeg",
+	".jpeg": "image/jpeg",
+	".png":  "image/png",
+	".gif":  "image/gif",
+	".webp": "image/webp",
+}
 
 type PublishVideoLogic struct {
 	logx.Logger
@@ -32,44 +60,80 @@ func NewPublishVideoLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Publ
 }
 
 // 视频投稿 POST /video/publish
+// 视频与封面由网关流式直传 OSS，rpc 只负责落库，文件内容不经 gRPC 传输。
 // cover、coverHeader 可为 nil，表示本次投稿没有上传封面
 func (l *PublishVideoLogic) PublishVideo(data multipart.File, dataHeader *multipart.FileHeader,
 	cover multipart.File, coverHeader *multipart.FileHeader, title, description string,
 ) (*types.PublishVideoResp, error) {
 	userId := jwt.UserIdFromContext(l.ctx)
 	if userId <= 0 {
-		return &types.PublishVideoResp{Base: types.Status{Code: errno.ErrUnauthorized.Code, Msg: errno.ErrUnauthorized.Msg}}, nil
+		return fail(errno.ErrUnauthorized), nil
 	}
 
-	content, err := io.ReadAll(data)
-	if err != nil {
-		return nil, err
+	// 先校验轻量参数，避免用户白传一个大文件
+	if strings.TrimSpace(title) == "" {
+		return fail(errno.ErrInvalidParam.WithMsg("视频标题不能为空")), nil
 	}
 
-	// 封面可选，未上传时传空
-	var coverContent []byte
-	var coverFilename string
+	// 视频大小与格式，上传前先拦掉
+	if dataHeader.Size > videoMaxSize {
+		return fail(errno.ErrFileTooLarge.WithMsg("视频大小不能超过 500MB")), nil
+	}
+	videoExt := strings.ToLower(filepath.Ext(dataHeader.Filename))
+	videoContentType, ok := allowedVideoExts[videoExt]
+	if !ok {
+		return fail(errno.ErrFileType.WithMsg("不支持的视频格式")), nil
+	}
+
+	// 封面校验（可选）
+	var coverExt, coverContentType string
 	if cover != nil && coverHeader != nil {
-		if coverContent, err = io.ReadAll(cover); err != nil {
-			return nil, err
+		if coverHeader.Size > coverMaxSize {
+			return fail(errno.ErrFileTooLarge.WithMsg("封面大小不能超过 5MB")), nil
 		}
-		coverFilename = coverHeader.Filename
+		coverExt = strings.ToLower(filepath.Ext(coverHeader.Filename))
+		if coverContentType, ok = allowedCoverExts[coverExt]; !ok {
+			return fail(errno.ErrFileType.WithMsg("不支持的封面格式")), nil
+		}
+	}
+
+	// 先传小的封面，失败时不会留下已上传的视频
+	var coverUrl string
+	if coverContentType != "" {
+		key := fmt.Sprintf("cover/%d/%d%s", userId, time.Now().UnixMilli(), coverExt)
+		url, err := l.svcCtx.OSS.Upload(key, cover, coverHeader.Size, coverContentType)
+		if err != nil {
+			l.Errorf("上传封面到 oss 失败: %v", err)
+			return fail(errno.ErrUploadFailed), nil
+		}
+		coverUrl = url
+	}
+
+	// 视频直接以 multipart 的文件流上传，不读进内存
+	key := fmt.Sprintf("video/%d/%d%s", userId, time.Now().UnixMilli(), videoExt)
+	videoUrl, err := l.svcCtx.OSS.Upload(key, data, dataHeader.Size, videoContentType)
+	if err != nil {
+		l.Errorf("上传视频到 oss 失败: %v", err)
+		return fail(errno.ErrUploadFailed), nil
 	}
 
 	rpcResp, err := l.svcCtx.VideoRpc.PublishVideo(l.ctx, &video.PublishVideoReq{
-		UserId:        userId,
-		Data:          content,
-		DataFilename:  dataHeader.Filename,
-		Cover:         coverContent,
-		CoverFilename: coverFilename,
-		Title:         title,
-		Description:   description,
+		UserId:      userId,
+		VideoUrl:    videoUrl,
+		CoverUrl:    coverUrl,
+		Title:       title,
+		Description: description,
 	})
 	if err != nil {
 		return nil, err
 	}
 	if rpcResp == nil || rpcResp.Base == nil {
-		return &types.PublishVideoResp{Base: types.Status{Code: errno.ErrInternal.Code, Msg: errno.ErrInternal.Msg}}, nil
+		return fail(errno.ErrInternal), nil
 	}
 	return &types.PublishVideoResp{Base: types.Status{Code: rpcResp.Base.Code, Msg: rpcResp.Base.Msg}}, nil
+}
+
+// fail 把业务错误包装成投稿响应
+func fail(e *errno.Errno) *types.PublishVideoResp {
+	return &types.PublishVideoResp{Base: types.Status{Code: e.Code, Msg: e.Msg}}
 }

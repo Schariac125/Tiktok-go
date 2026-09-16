@@ -307,13 +307,11 @@ func (x *VideoFeedData) GetItems() []*Video {
 
 type PublishVideoReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`                     // 作者 id（网关从登录态注入）
-	Data          []byte                 `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`                                        // 视频原始文件
-	DataFilename  string                 `protobuf:"bytes,3,opt,name=data_filename,json=dataFilename,proto3" json:"data_filename,omitempty"`    // 视频原始文件名（用于判断类型）
-	Cover         []byte                 `protobuf:"bytes,4,opt,name=cover,proto3" json:"cover,omitempty"`                                      // 封面文件，可为空
-	CoverFilename string                 `protobuf:"bytes,5,opt,name=cover_filename,json=coverFilename,proto3" json:"cover_filename,omitempty"` // 封面原始文件名
-	Title         string                 `protobuf:"bytes,6,opt,name=title,proto3" json:"title,omitempty"`                                      // 视频标题
-	Description   string                 `protobuf:"bytes,7,opt,name=description,proto3" json:"description,omitempty"`                          // 视频描述
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`      // 作者 id（网关从登录态注入）
+	VideoUrl      string                 `protobuf:"bytes,2,opt,name=video_url,json=videoUrl,proto3" json:"video_url,omitempty"` // 视频在对象存储中的地址（网关上传后传入）
+	CoverUrl      string                 `protobuf:"bytes,3,opt,name=cover_url,json=coverUrl,proto3" json:"cover_url,omitempty"` // 封面在对象存储中的地址，可为空
+	Title         string                 `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`                       // 视频标题
+	Description   string                 `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`           // 视频描述
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -355,30 +353,16 @@ func (x *PublishVideoReq) GetUserId() int64 {
 	return 0
 }
 
-func (x *PublishVideoReq) GetData() []byte {
+func (x *PublishVideoReq) GetVideoUrl() string {
 	if x != nil {
-		return x.Data
-	}
-	return nil
-}
-
-func (x *PublishVideoReq) GetDataFilename() string {
-	if x != nil {
-		return x.DataFilename
+		return x.VideoUrl
 	}
 	return ""
 }
 
-func (x *PublishVideoReq) GetCover() []byte {
+func (x *PublishVideoReq) GetCoverUrl() string {
 	if x != nil {
-		return x.Cover
-	}
-	return nil
-}
-
-func (x *PublishVideoReq) GetCoverFilename() string {
-	if x != nil {
-		return x.CoverFilename
+		return x.CoverUrl
 	}
 	return ""
 }
@@ -1015,15 +999,13 @@ const file_api_video_video_proto_rawDesc = "" +
 	"\x05items\x18\x01 \x03(\v2\f.video.VideoR\x05items\x12\x14\n" +
 	"\x05total\x18\x02 \x01(\x03R\x05total\"3\n" +
 	"\rVideoFeedData\x12\"\n" +
-	"\x05items\x18\x01 \x03(\v2\f.video.VideoR\x05items\"\xd8\x01\n" +
+	"\x05items\x18\x01 \x03(\v2\f.video.VideoR\x05items\"\x9c\x01\n" +
 	"\x0fPublishVideoReq\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x12\n" +
-	"\x04data\x18\x02 \x01(\fR\x04data\x12#\n" +
-	"\rdata_filename\x18\x03 \x01(\tR\fdataFilename\x12\x14\n" +
-	"\x05cover\x18\x04 \x01(\fR\x05cover\x12%\n" +
-	"\x0ecover_filename\x18\x05 \x01(\tR\rcoverFilename\x12\x14\n" +
-	"\x05title\x18\x06 \x01(\tR\x05title\x12 \n" +
-	"\vdescription\x18\a \x01(\tR\vdescription\"5\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x1b\n" +
+	"\tvideo_url\x18\x02 \x01(\tR\bvideoUrl\x12\x1b\n" +
+	"\tcover_url\x18\x03 \x01(\tR\bcoverUrl\x12\x14\n" +
+	"\x05title\x18\x04 \x01(\tR\x05title\x12 \n" +
+	"\vdescription\x18\x05 \x01(\tR\vdescription\"5\n" +
 	"\x10PublishVideoResp\x12!\n" +
 	"\x04base\x18\x01 \x01(\v2\r.video.StatusR\x04base\"9\n" +
 	"\x0eDeleteVideoReq\x12\x17\n" +

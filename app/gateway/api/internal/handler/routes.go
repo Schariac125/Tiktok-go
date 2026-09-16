@@ -5,6 +5,7 @@ package handler
 
 import (
 	"net/http"
+	"time"
 
 	user "tiktok-go/app/gateway/api/internal/handler/user"
 	video "tiktok-go/app/gateway/api/internal/handler/video"
@@ -14,22 +15,6 @@ import (
 )
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				Method:  http.MethodPost,
-				Path:    "/login",
-				Handler: user.LoginHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodPost,
-				Path:    "/register",
-				Handler: user.RegisterHandler(serverCtx),
-			},
-		},
-		rest.WithPrefix("/user"),
-	)
-
 	server.AddRoutes(
 		rest.WithMiddlewares(
 			[]rest.Middleware{serverCtx.AuthMiddleware},
@@ -71,6 +56,22 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
 			{
+				Method:  http.MethodPost,
+				Path:    "/login",
+				Handler: user.LoginHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/register",
+				Handler: user.RegisterHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/user"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
 				Method:  http.MethodGet,
 				Path:    "/feed",
 				Handler: video.FeedVideoHandler(serverCtx),
@@ -99,14 +100,25 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			[]rest.Middleware{serverCtx.AuthMiddleware},
 			[]rest.Route{
 				{
-					Method:  http.MethodDelete,
-					Path:    "/delete",
-					Handler: video.DeleteVideoHandler(serverCtx),
-				},
-				{
 					Method:  http.MethodPost,
 					Path:    "/publish",
 					Handler: video.PublishVideoHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/video"),
+		rest.WithTimeout(600000*time.Millisecond),
+		rest.WithMaxBytes(536870912),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.AuthMiddleware},
+			[]rest.Route{
+				{
+					Method:  http.MethodDelete,
+					Path:    "/delete",
+					Handler: video.DeleteVideoHandler(serverCtx),
 				},
 			}...,
 		),

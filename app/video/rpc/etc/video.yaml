@@ -12,11 +12,3 @@ MySQL:
 CacheRedis:
   - Host: 127.0.0.1:6379
     Type: node
-
-# 阿里云 OSS（视频、封面等对象存储）
-OSS:
-  Endpoint: "oss-cn-beijing.aliyuncs.com"
-  AccessKeyID: ""
-  AccessKeySecret: ""
-  BucketName: ""
-  Domain: "" # 为空时使用默认公网域名 https://<bucket>.<endpoint>

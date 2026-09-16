@@ -42,13 +42,11 @@ message VideoFeedData {
 // ------- 投稿 -------
 
 message PublishVideoReq {
-  int64 user_id = 1;         // 作者 id（网关从登录态注入）
-  bytes data = 2;            // 视频原始文件
-  string data_filename = 3;  // 视频原始文件名（用于判断类型）
-  bytes cover = 4;           // 封面文件，可为空
-  string cover_filename = 5; // 封面原始文件名
-  string title = 6;          // 视频标题
-  string description = 7;    // 视频描述
+  int64 user_id = 1;      // 作者 id（网关从登录态注入）
+  string video_url = 2;   // 视频在对象存储中的地址（网关上传后传入）
+  string cover_url = 3;   // 封面在对象存储中的地址，可为空
+  string title = 4;       // 视频标题
+  string description = 5; // 视频描述
 }
 
 message PublishVideoResp {

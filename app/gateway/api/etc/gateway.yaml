@@ -2,8 +2,9 @@ Name: gateway
 Host: 0.0.0.0
 Port: 8888
 
-# 视频投稿要上传大文件，go-zero 默认只收 1MB
-MaxBytes: 134217728 # 128MB
+# 全局请求体上限，够头像上传（5MB）即可；
+# 视频投稿的大文件由 video_auth.api 的 @server(maxBytes) 单独放开
+MaxBytes: 8388608 # 8MB
 
 UserRpc:
   Etcd:
@@ -16,6 +17,14 @@ VideoRpc:
     Hosts:
       - 127.0.0.1:2379
     Key: video.rpc
+
+# 阿里云 OSS（视频、封面等对象存储，投稿时由网关直传）
+OSS:
+  Endpoint: "oss-cn-beijing.aliyuncs.com"
+  AccessKeyID: ""
+  AccessKeySecret: ""
+  BucketName: ""
+  Domain: "" # 为空时使用默认公网域名 https://<bucket>.<endpoint>
 
 # 与 user.rpc 的 JWT.AccessSecret 保持一致
 JWT:
