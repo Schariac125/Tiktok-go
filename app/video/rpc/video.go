@@ -18,6 +18,9 @@ import (
 
 var configFile = flag.String("f", "etc/video.yaml", "the config file")
 
+// maxUploadBytes gRPC 单条消息上限，需容纳投稿的视频 + 封面
+const maxUploadBytes = 128 << 20 // 128MB
+
 func main() {
 	flag.Parse()
 
@@ -32,6 +35,8 @@ func main() {
 			reflection.Register(grpcServer)
 		}
 	})
+	// 投稿接口经 gRPC 传视频文件内容，gRPC 默认只收 4MB，按业务上限放开
+	s.AddOptions(grpc.MaxRecvMsgSize(maxUploadBytes))
 	defer s.Stop()
 
 	fmt.Printf("Starting rpc server at %s...\n", c.ListenOn)

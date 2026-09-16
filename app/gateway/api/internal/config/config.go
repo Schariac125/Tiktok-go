@@ -9,8 +9,9 @@ import (
 
 type Config struct {
 	rest.RestConf
-	UserRpc zrpc.RpcClientConf // user rpc 客户端配置（etcd 服务发现）
-	JWT     struct {
+	UserRpc  zrpc.RpcClientConf // user rpc 客户端配置（etcd 服务发现）
+	VideoRpc zrpc.RpcClientConf // video rpc 客户端配置（etcd 服务发现）
+	JWT      struct {
 		AccessSecret string // 与 user.rpc 的签名密钥一致
 		AccessExpire time.Duration
 	}

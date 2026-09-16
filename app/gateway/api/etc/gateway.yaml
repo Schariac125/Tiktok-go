@@ -2,11 +2,20 @@ Name: gateway
 Host: 0.0.0.0
 Port: 8888
 
+# 视频投稿要上传大文件，go-zero 默认只收 1MB
+MaxBytes: 134217728 # 128MB
+
 UserRpc:
   Etcd:
     Hosts:
       - 127.0.0.1:2379
     Key: user.rpc
+
+VideoRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: video.rpc
 
 # 与 user.rpc 的 JWT.AccessSecret 保持一致
 JWT:
