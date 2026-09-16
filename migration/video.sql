@@ -18,7 +18,9 @@ CREATE TABLE IF NOT EXISTS `video` (
     -- 查看某个用户投稿的视频
     KEY `idx_user_id` (`user_id`),
     -- 首页视频流按时间倒序取，搜索按时间区间过滤
-    KEY `idx_created_at` (`created_at`)
+    KEY `idx_created_at` (`created_at`),
+    -- 热门排行榜按观看量倒序取；带上 id 是为了让同观看量下的次序也走索引，避免 filesort
+    KEY `idx_visit_count` (`visit_count`, `id`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci COMMENT ='视频表';
