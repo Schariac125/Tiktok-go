@@ -43,33 +43,33 @@ func (l *PublishVideoLogic) PublishVideo(data multipart.File, dataHeader *multip
 ) (*types.PublishVideoResp, error) {
 	userId := jwt.UserIdFromContext(l.ctx)
 	if userId <= 0 {
-		return fail(errno.ErrUnauthorized), nil
+		return &types.PublishVideoResp{Base: toStatus(errno.ErrUnauthorized)}, nil
 	}
 
 	// 先校验轻量参数，避免用户白传一个大文件
 	if strings.TrimSpace(title) == "" {
-		return fail(errno.ErrInvalidParam.WithMsg("视频标题不能为空")), nil
+		return &types.PublishVideoResp{Base: toStatus(errno.ErrInvalidParam.WithMsg("视频标题不能为空"))}, nil
 	}
 
 	// 视频大小与格式，上传前先拦掉
 	if dataHeader.Size > constant.VideoMaxSize {
-		return fail(errno.ErrFileTooLarge.WithMsg("视频大小不能超过 500MB")), nil
+		return &types.PublishVideoResp{Base: toStatus(errno.ErrFileTooLarge.WithMsg("视频大小不能超过 500MB"))}, nil
 	}
 	videoExt := strings.ToLower(filepath.Ext(dataHeader.Filename))
 	videoContentType, ok := constant.AllowedVideoExts[videoExt]
 	if !ok {
-		return fail(errno.ErrFileType.WithMsg("不支持的视频格式")), nil
+		return &types.PublishVideoResp{Base: toStatus(errno.ErrFileType.WithMsg("不支持的视频格式"))}, nil
 	}
 
 	// 封面校验（可选）
 	var coverExt, coverContentType string
 	if cover != nil && coverHeader != nil {
 		if coverHeader.Size > constant.CoverMaxSize {
-			return fail(errno.ErrFileTooLarge.WithMsg("封面大小不能超过 5MB")), nil
+			return &types.PublishVideoResp{Base: toStatus(errno.ErrFileTooLarge.WithMsg("封面大小不能超过 5MB"))}, nil
 		}
 		coverExt = strings.ToLower(filepath.Ext(coverHeader.Filename))
 		if coverContentType, ok = constant.AllowedImageExts[coverExt]; !ok {
-			return fail(errno.ErrFileType.WithMsg("不支持的封面格式")), nil
+			return &types.PublishVideoResp{Base: toStatus(errno.ErrFileType.WithMsg("不支持的封面格式"))}, nil
 		}
 	}
 
@@ -80,7 +80,7 @@ func (l *PublishVideoLogic) PublishVideo(data multipart.File, dataHeader *multip
 		url, err := l.svcCtx.OSS.Upload(key, cover, coverHeader.Size, coverContentType)
 		if err != nil {
 			l.Errorf("上传封面到 oss 失败: %v", err)
-			return fail(errno.ErrUploadFailed), nil
+			return &types.PublishVideoResp{Base: toStatus(errno.ErrUploadFailed)}, nil
 		}
 		coverUrl = url
 	}
@@ -90,7 +90,7 @@ func (l *PublishVideoLogic) PublishVideo(data multipart.File, dataHeader *multip
 	videoUrl, err := l.svcCtx.OSS.Upload(key, data, dataHeader.Size, videoContentType)
 	if err != nil {
 		l.Errorf("上传视频到 oss 失败: %v", err)
-		return fail(errno.ErrUploadFailed), nil
+		return &types.PublishVideoResp{Base: toStatus(errno.ErrUploadFailed)}, nil
 	}
 
 	rpcResp, err := l.svcCtx.VideoRpc.PublishVideo(l.ctx, &video.PublishVideoReq{
@@ -104,12 +104,7 @@ func (l *PublishVideoLogic) PublishVideo(data multipart.File, dataHeader *multip
 		return nil, err
 	}
 	if rpcResp == nil || rpcResp.Base == nil {
-		return fail(errno.ErrInternal), nil
+		return &types.PublishVideoResp{Base: toStatus(errno.ErrInternal)}, nil
 	}
 	return &types.PublishVideoResp{Base: types.Status{Code: rpcResp.Base.Code, Msg: rpcResp.Base.Msg}}, nil
-}
-
-// fail 把业务错误包装成投稿响应
-func fail(e *errno.Errno) *types.PublishVideoResp {
-	return &types.PublishVideoResp{Base: types.Status{Code: e.Code, Msg: e.Msg}}
 }

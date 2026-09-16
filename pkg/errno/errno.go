@@ -34,6 +34,9 @@ var (
 	ErrPasswordLen   = &Errno{Code: 400, Msg: "密码长度需为 6-64 个字符"}
 	ErrUsernameExist = &Errno{Code: 400, Msg: "用户名已存在"}
 	ErrUserNotFound  = &Errno{Code: 404, Msg: "用户不存在"}
+	ErrVideoNotFound = &Errno{Code: 404, Msg: "视频不存在"}
+	// ErrVideoForbidden 操作的不是自己投稿的视频
+	ErrVideoForbidden = &Errno{Code: 403, Msg: "无权操作该视频"}
 	ErrPasswordWrong = &Errno{Code: 401, Msg: "用户名或密码错误"}
 	ErrUnauthorized  = &Errno{Code: 401, Msg: "未登录或凭证已失效"}
 	ErrMfaCodeNeeded = &Errno{Code: 401, Msg: "需要 MFA 验证码"}
