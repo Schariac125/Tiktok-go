@@ -10,17 +10,15 @@ import (
 	"github.com/zeromicro/go-zero/rest/httpx"
 	"tiktok-go/app/gateway/api/internal/logic/video"
 	"tiktok-go/app/gateway/api/internal/svc"
+	"tiktok-go/pkg/constant"
 )
-
-// parseMaxMemory 视频超过该阈值时由标准库落到临时文件，避免整段驻留内存
-const parseMaxMemory = 32 << 20 // 32MB
 
 // 视频投稿 POST /video/publish
 // 以 multipart/form-data 上传：字段 data 为视频原始文件（必填）、
 // cover 为封面文件（可省略），title、description 为普通表单字段
 func PublishVideoHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := r.ParseMultipartForm(parseMaxMemory); err != nil {
+		if err := r.ParseMultipartForm(constant.MultipartMaxMemory); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}

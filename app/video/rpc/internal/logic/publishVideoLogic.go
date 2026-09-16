@@ -7,15 +7,10 @@ import (
 	"tiktok-go/app/video/rpc/internal/svc"
 	"tiktok-go/app/video/rpc/model"
 	"tiktok-go/app/video/rpc/video"
+	"tiktok-go/pkg/constant"
 	"tiktok-go/pkg/errno"
 
 	"github.com/zeromicro/go-zero/core/logx"
-)
-
-// 字段长度限制，与 migration/video.sql 的列宽一致
-const (
-	titleMaxLen       = 255
-	descriptionMaxLen = 1024
 )
 
 type PublishVideoLogic struct {
@@ -46,11 +41,11 @@ func (l *PublishVideoLogic) PublishVideo(in *video.PublishVideoReq) (*video.Publ
 	if title == "" {
 		return &video.PublishVideoResp{Base: toStatus(errno.ErrInvalidParam.WithMsg("视频标题不能为空"))}, nil
 	}
-	if len([]rune(title)) > titleMaxLen {
+	if len([]rune(title)) > constant.TitleMaxLen {
 		return &video.PublishVideoResp{Base: toStatus(errno.ErrInvalidParam.WithMsg("视频标题过长"))}, nil
 	}
 	description := strings.TrimSpace(in.Description)
-	if len([]rune(description)) > descriptionMaxLen {
+	if len([]rune(description)) > constant.DescriptionMaxLen {
 		return &video.PublishVideoResp{Base: toStatus(errno.ErrInvalidParam.WithMsg("视频描述过长"))}, nil
 	}
 

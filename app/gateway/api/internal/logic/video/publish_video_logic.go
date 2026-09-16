@@ -14,36 +14,12 @@ import (
 	"tiktok-go/app/gateway/api/internal/svc"
 	"tiktok-go/app/gateway/api/internal/types"
 	"tiktok-go/app/video/rpc/video"
+	"tiktok-go/pkg/constant"
 	"tiktok-go/pkg/errno"
 	"tiktok-go/pkg/jwt"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
-
-// 投稿文件的大小限制
-const (
-	videoMaxSize = 500 << 20 // 视频 500MB
-	coverMaxSize = 5 << 20   // 封面 5MB
-)
-
-// 允许的视频格式
-var allowedVideoExts = map[string]string{
-	".mp4":  "video/mp4",
-	".mov":  "video/quicktime",
-	".avi":  "video/x-msvideo",
-	".mkv":  "video/x-matroska",
-	".webm": "video/webm",
-	".flv":  "video/x-flv",
-}
-
-// 允许的封面格式
-var allowedCoverExts = map[string]string{
-	".jpg":  "image/jpeg",
-	".jpeg": "image/jpeg",
-	".png":  "image/png",
-	".gif":  "image/gif",
-	".webp": "image/webp",
-}
 
 type PublishVideoLogic struct {
 	logx.Logger
@@ -76,11 +52,11 @@ func (l *PublishVideoLogic) PublishVideo(data multipart.File, dataHeader *multip
 	}
 
 	// 视频大小与格式，上传前先拦掉
-	if dataHeader.Size > videoMaxSize {
+	if dataHeader.Size > constant.VideoMaxSize {
 		return fail(errno.ErrFileTooLarge.WithMsg("视频大小不能超过 500MB")), nil
 	}
 	videoExt := strings.ToLower(filepath.Ext(dataHeader.Filename))
-	videoContentType, ok := allowedVideoExts[videoExt]
+	videoContentType, ok := constant.AllowedVideoExts[videoExt]
 	if !ok {
 		return fail(errno.ErrFileType.WithMsg("不支持的视频格式")), nil
 	}
@@ -88,11 +64,11 @@ func (l *PublishVideoLogic) PublishVideo(data multipart.File, dataHeader *multip
 	// 封面校验（可选）
 	var coverExt, coverContentType string
 	if cover != nil && coverHeader != nil {
-		if coverHeader.Size > coverMaxSize {
+		if coverHeader.Size > constant.CoverMaxSize {
 			return fail(errno.ErrFileTooLarge.WithMsg("封面大小不能超过 5MB")), nil
 		}
 		coverExt = strings.ToLower(filepath.Ext(coverHeader.Filename))
-		if coverContentType, ok = allowedCoverExts[coverExt]; !ok {
+		if coverContentType, ok = constant.AllowedImageExts[coverExt]; !ok {
 			return fail(errno.ErrFileType.WithMsg("不支持的封面格式")), nil
 		}
 	}

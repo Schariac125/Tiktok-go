@@ -12,23 +12,11 @@ import (
 	"tiktok-go/app/user/rpc/internal/svc"
 	"tiktok-go/app/user/rpc/model"
 	"tiktok-go/app/user/rpc/user"
+	"tiktok-go/pkg/constant"
 	"tiktok-go/pkg/errno"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
-
-// 允许的头像格式与大小限制
-const (
-	avatarMaxSize = 5 << 20 // 5MB
-)
-
-var allowedAvatarExts = map[string]string{
-	".jpg":  "image/jpeg",
-	".jpeg": "image/jpeg",
-	".png":  "image/png",
-	".gif":  "image/gif",
-	".webp": "image/webp",
-}
 
 type UploadAvatarLogic struct {
 	ctx    context.Context
@@ -52,13 +40,13 @@ func (l *UploadAvatarLogic) UploadAvatar(in *user.UploadAvatarReq) (*user.Upload
 	if len(in.Avatar) == 0 {
 		return &user.UploadAvatarResp{Base: toStatus(errno.ErrEmptyFile)}, nil
 	}
-	if len(in.Avatar) > avatarMaxSize {
+	if len(in.Avatar) > constant.AvatarMaxSize {
 		return &user.UploadAvatarResp{Base: toStatus(errno.ErrFileTooLarge)}, nil
 	}
 
 	// 从文件名后缀判断类型（网关侧 multipart 传入）
 	ext := strings.ToLower(filepath.Ext(in.Filename))
-	contentType, ok := allowedAvatarExts[ext]
+	contentType, ok := constant.AllowedImageExts[ext]
 	if !ok {
 		return &user.UploadAvatarResp{Base: toStatus(errno.ErrFileType)}, nil
 	}
