@@ -34,7 +34,9 @@ GATEWAY_API := api/main.api
 BIN_DIR     := bin
 
 .DEFAULT_GOAL := generate
-.PHONY: generate api-build rpc-build model-build build run-gateway clean
+.PHONY: generate api-build rpc-build model-build build \
+        infra-up infra-down infra-logs \
+        run-gateway clean
 
 # 生成全部代码：网关 + 各模块 rpc
 generate: api-build rpc-build
@@ -81,6 +83,22 @@ build:
 		if [ ! -d app/$$m/rpc ]; then echo "跳过 $$m-rpc：app/$$m/rpc 不存在，请先 make rpc-build"; continue; fi; \
 		go build -o $(BIN_DIR)/$$m-rpc ./app/$$m/rpc || exit 1; \
 	done
+
+# 启动依赖中间件（etcd、mysql、redis），配置见 docker-compose.yml。
+# 三个数据卷由外部持有（compose 里标了 external），先建好再起容器，已存在时是空操作。
+infra-up:
+	@docker volume create mysql_data >/dev/null
+	@docker volume create redis_data >/dev/null
+	@docker volume create etcd_data >/dev/null
+	docker compose up -d
+
+# 停止中间件，数据卷保留
+infra-down:
+	docker compose down
+
+# 跟踪中间件日志
+infra-logs:
+	docker compose logs -f
 
 # 启动网关 make run-gateway
 run-gateway:

@@ -1,0 +1,87 @@
+# tiktok-go 开发环境的三个中间件。
+#
+# 用法：
+#   docker compose up -d       启动全部
+#   docker compose ps          查看状态（含健康检查）
+#   docker compose logs -f     跟踪日志
+#   docker compose down        停止并删除容器（数据卷保留）
+#
+# 约定：
+#   - 容器名、卷名都写死了，与之前 docker run 建立的一致，
+#     因此已有的 mysql_data、redis_data 会被直接复用，数据不会丢。
+#   - 端口与本项目各 etc/*.yaml 里的配置一一对应，改动这里要同步改配置。
+#   - MySQL 的 --default-time-zone=+08:00 不能少：库内时间按东八区存，
+#     而 DSN 里写的 loc=Asia/Shanghai，两边必须一致，否则读出的时间会差 8 小时。
+#   - 密码为本地开发用，生产环境请改用 .env 或 secrets。
+
+name: tiktok-go
+
+services:
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.17
+    container_name: tiktok-etcd
+    restart: unless-stopped
+    ports:
+      - "2379:2379" # 客户端通信，服务注册与发现
+      - "2380:2380" # 节点间通信
+    command:
+      - etcd
+      - --name=tiktok-etcd
+      - --data-dir=/etcd-data
+      - --advertise-client-urls=http://0.0.0.0:2379
+      - --listen-client-urls=http://0.0.0.0:2379
+    volumes:
+      - etcd_data:/etcd-data
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql8
+    restart: unless-stopped
+    ports:
+      - "13306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "350322"
+      TZ: Asia/Shanghai
+    command:
+      - --default-time-zone=+08:00
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p350322"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: tiktok-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  # 卷由外部创建并持有（docker volume create，见 make infra-up）。
+  # 指定固定卷名是为了复用已有的 mysql_data / redis_data，不被加项目名前缀；
+  # external 则让 compose 只使用、不管理它们——docker compose down -v 不会误删数据。
+  etcd_data:
+    name: etcd_data
+    external: true
+  mysql_data:
+    name: mysql_data
+    external: true
+  redis_data:
+    name: redis_data
+    external: true
