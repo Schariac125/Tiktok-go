@@ -41,7 +41,8 @@ type (
 )
 
 @server (
-	prefix: /user
+	prefix:     /user
+	group:      user
 	middleware: AuthMiddleware
 )
 service gateway {
@@ -56,7 +57,8 @@ service gateway {
 }
 
 @server (
-	prefix: /auth/mfa
+	prefix:     /auth/mfa
+	group:      user
 	middleware: AuthMiddleware
 )
 service gateway {

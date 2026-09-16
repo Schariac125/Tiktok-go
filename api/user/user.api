@@ -32,8 +32,11 @@ type (
 	}
 )
 
+// group 决定生成的 handler/logic 落在 internal/handler|logic/<group> 子包，
+// 不声明的话 goctl 会把所有模块的骨架平铺到包根目录。
 @server (
 	prefix: /user
+	group:  user
 )
 service gateway {
 	// 注册
