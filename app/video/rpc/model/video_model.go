@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
@@ -25,6 +26,8 @@ type (
 		CountByUserId(ctx context.Context, userId uint64) (int64, error)
 		// FindPopular 按观看量倒序取热门视频（只含未删除的），用于排行榜。
 		FindPopular(ctx context.Context, limit int64) ([]*Video, error)
+		// FeedLatest 取首页视频流：未删除的视频按发布时间倒序。
+		FeedLatest(ctx context.Context, since time.Time, limit int64) ([]*Video, error)
 	}
 
 	customVideoModel struct {
@@ -95,6 +98,27 @@ func (m *customVideoModel) FindPopular(ctx context.Context, limit int64) ([]*Vid
 
 	var list []*Video
 	if err := m.QueryRowsNoCacheCtx(ctx, &list, query, limit); err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+// FeedLatest 取首页视频流：未删除的视频按发布时间倒序。
+// since 为零值时取最新的一批；非零值时只取该时间之后的，用于下拉刷新。
+// 带上 id 排序是为了同一时间戳下的次序稳定，避免刷新时出现重复或漏项。
+func (m *customVideoModel) FeedLatest(ctx context.Context, since time.Time, limit int64) ([]*Video, error) {
+	query := fmt.Sprintf("select %s from %s where `delete_at` is null", videoRows, m.table)
+	args := make([]any, 0, 2)
+
+	if !since.IsZero() {
+		query += " and `created_at` > ?"
+		args = append(args, since)
+	}
+	query += " order by `created_at` desc, `id` desc limit ?"
+	args = append(args, limit)
+
+	var list []*Video
+	if err := m.QueryRowsNoCacheCtx(ctx, &list, query, args...); err != nil {
 		return nil, err
 	}
 	return list, nil

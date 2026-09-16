@@ -9,6 +9,10 @@ import (
 	"tiktok-go/pkg/errno"
 )
 
+// timeLayout 接口约定的时间格式。
+// 响应里的时间按它输出，请求里的时间游标（如 lastest_time）也按它解析，两边必须一致。
+const timeLayout = "2006-01-02 15:04:05"
+
 // toStatus 将业务错误转换为 proto 的 Status 响应
 func toStatus(e *errno.Errno) *video.Status {
 	return &video.Status{Code: e.Code, Msg: e.Msg}
@@ -43,7 +47,7 @@ func convertVideos(list []*model.Video) []*video.Video {
 }
 
 func formatTime(t time.Time) string {
-	return t.Local().Format("2006-01-02 15:04:05")
+	return t.Local().Format(timeLayout)
 }
 
 func formatNullTime(t sql.NullTime) string {
