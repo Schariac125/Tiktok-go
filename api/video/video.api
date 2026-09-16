@@ -1,0 +1,95 @@
+syntax = "v1"
+
+import "../model.api"
+
+// 视频模块 —— 无需登录鉴权的路由
+//
+// 注意：query 参数必须用 form tag。go-zero 的 httpx.Parse 只在 form tag 上解析
+// query，写成 json tag 会直接报 field "xxx" is not set。
+
+type (
+	// 分页视频数据，查看用户视频、搜索视频返回总数
+	VideoPageData {
+		Items []Video `json:"items"` // 视频列表
+		Total int64   `json:"total"` // 总数
+	}
+
+	// 视频流数据，首页视频流、热门排行榜不返回总数
+	VideoFeedData {
+		Items []Video `json:"items"` // 视频列表
+	}
+
+	// 查看用户视频请求，参数走 query
+	ListVideoReq {
+		UserId   int64 `form:"user_id"`   // 要查看的用户 id
+		PageNum  int64 `form:"page_num"`  // 页码
+		PageSize int64 `form:"page_size"` // 每页数量
+	}
+
+	// 查看用户视频响应
+	ListVideoResp {
+		Base Status        `json:"base"` // 响应状态
+		Data VideoPageData `json:"data"` // 视频列表
+	}
+
+	// 首页视频流请求，参数走 query
+	FeedVideoReq {
+		LastestTime string `form:"lastest_time,optional"` // 有就返回该时间后的视频流
+	}
+
+	// 首页视频流响应
+	FeedVideoResp {
+		Base Status        `json:"base"` // 响应状态
+		Data VideoFeedData `json:"data"` // 视频流
+	}
+
+	// 热门排行榜请求，参数走 query
+	PopularVideoReq {
+		PageSize int64 `form:"page_size,optional"` // 每页数量
+		PageNum  int64 `form:"page_num,optional"`  // 页码
+	}
+
+	// 热门排行榜响应
+	PopularVideoResp {
+		Base Status        `json:"base"` // 响应状态
+		Data VideoFeedData `json:"data"` // 视频列表
+	}
+
+	// 搜索视频请求，参数走 query
+	SearchVideoReq {
+		Keywords string `form:"keywords"`            // 关键词，匹配标题和描述
+		PageSize int64  `form:"page_size"`           // 每页数量
+		PageNum  int64  `form:"page_num"`            // 页码
+		FromDate int64  `form:"from_date,optional"`  // 起始时间
+		ToDate   int64  `form:"to_date,optional"`    // 结束时间
+		Username string `form:"username,optional"`   // 如果有，则代表查某个特定用户的
+	}
+
+	// 搜索视频响应
+	SearchVideoResp {
+		Base Status        `json:"base"` // 响应状态
+		Data VideoPageData `json:"data"` // 搜索结果
+	}
+)
+
+@server (
+	prefix: /video
+	group:  video
+)
+service gateway {
+	// 查看某一个用户投稿的视频，支持分页查找
+	@handler listVideo
+	get /list (ListVideoReq) returns (ListVideoResp)
+
+	// 首页视频流
+	@handler feedVideo
+	get /feed (FeedVideoReq) returns (FeedVideoResp)
+
+	// 热门排行榜，需要引入 redis 做缓存
+	@handler popularVideo
+	get /popular (PopularVideoReq) returns (PopularVideoResp)
+
+	// 搜索视频，输入关键词去匹配标题和描述
+	@handler searchVideo
+	post /search (SearchVideoReq) returns (SearchVideoResp)
+}

@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+package video;
+
+option go_package = "./video";
+
+// ------- 数据模型 -------
+
+// 响应状态
+message Status {
+  int32 code = 1; // 状态码
+  string msg = 2; // 提示信息
+}
+
+// 视频
+message Video {
+  int64 id = 1;            // ID 编号
+  int64 user_id = 2;       // 视频作者 id
+  string video_url = 3;    // 视频链接
+  string cover_url = 4;    // 封面链接
+  string title = 5;        // 视频标题
+  string description = 6;  // 视频描述
+  int64 visit_count = 7;   // 观看量
+  int64 like_count = 8;    // 点赞量
+  int64 comment_count = 9; // 评论数
+  string created_at = 10;  // 创建时间
+  string updated_at = 11;  // 更新时间
+  string delete_at = 12;   // 删除时间
+}
+
+// 分页视频数据，查看用户视频、搜索视频返回总数
+message VideoPageData {
+  repeated Video items = 1; // 视频列表
+  int64 total = 2;          // 总数
+}
+
+// 视频流数据，首页视频流、热门排行榜不返回总数
+message VideoFeedData {
+  repeated Video items = 1; // 视频列表
+}
+
+// ------- 投稿 -------
+
+message PublishVideoReq {
+  int64 user_id = 1;         // 作者 id（网关从登录态注入）
+  bytes data = 2;            // 视频原始文件
+  string data_filename = 3;  // 视频原始文件名（用于判断类型）
+  bytes cover = 4;           // 封面文件，可为空
+  string cover_filename = 5; // 封面原始文件名
+  string title = 6;          // 视频标题
+  string description = 7;    // 视频描述
+}
+
+message PublishVideoResp {
+  Status base = 1;
+}
+
+// ------- 删除视频 -------
+
+message DeleteVideoReq {
+  int64 user_id = 1; // 操作者 id（网关从登录态注入）
+  int64 id = 2;      // 视频 id
+}
+
+message DeleteVideoResp {
+  Status base = 1;
+}
+
+// ------- 查看用户视频 -------
+
+message ListVideoReq {
+  int64 user_id = 1;   // 要查看的用户 id
+  int64 page_num = 2;  // 页码
+  int64 page_size = 3; // 每页数量
+}
+
+message ListVideoResp {
+  Status base = 1;
+  VideoPageData data = 2;
+}
+
+// ------- 首页视频流 -------
+
+message FeedVideoReq {
+  string lastest_time = 1; // 有就返回该时间后的视频流
+}
+
+message FeedVideoResp {
+  Status base = 1;
+  VideoFeedData data = 2;
+}
+
+// ------- 热门排行榜 -------
+
+message PopularVideoReq {
+  int64 page_size = 1; // 每页数量
+  int64 page_num = 2;  // 页码
+}
+
+message PopularVideoResp {
+  Status base = 1;
+  VideoFeedData data = 2;
+}
+
+// ------- 搜索视频 -------
+
+message SearchVideoReq {
+  string keywords = 1; // 关键词，匹配标题和描述
+  int64 page_size = 2; // 每页数量
+  int64 page_num = 3;  // 页码
+  int64 from_date = 4; // 起始时间
+  int64 to_date = 5;   // 结束时间
+  string username = 6; // 如果有，则代表查某个特定用户的
+}
+
+message SearchVideoResp {
+  Status base = 1;
+  VideoPageData data = 2;
+}
+
+service VideoService {
+  // 视频投稿 POST /video/publish
+  rpc PublishVideo(PublishVideoReq) returns (PublishVideoResp);
+  // 删除视频 DELETE /video/delete
+  rpc DeleteVideo(DeleteVideoReq) returns (DeleteVideoResp);
+  // 查看用户视频 GET /video/list
+  rpc ListVideo(ListVideoReq) returns (ListVideoResp);
+  // 首页视频流 GET /video/feed
+  rpc FeedVideo(FeedVideoReq) returns (FeedVideoResp);
+  // 热门排行榜 GET /video/popular
+  rpc PopularVideo(PopularVideoReq) returns (PopularVideoResp);
+  // 搜索视频 POST /video/search
+  rpc SearchVideo(SearchVideoReq) returns (SearchVideoResp);
+}

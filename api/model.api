@@ -24,3 +24,19 @@ type MFAQrcode {
 	Secret string `json:"secret"` // mfa 密钥
 	Qrcode string `json:"qrcode"` // base64 编码后的 qrcode
 }
+
+// 视频
+type Video {
+	Id           int64  `json:"id"`            // ID 编号
+	UserId       int64  `json:"user_id"`       // 视频作者 id
+	VideoUrl     string `json:"video_url"`     // 视频链接
+	CoverUrl     string `json:"cover_url"`     // 封面链接
+	Title        string `json:"title"`         // 视频标题
+	Description  string `json:"description"`   // 视频描述
+	VisitCount   int64  `json:"visit_count"`   // 观看量
+	LikeCount    int64  `json:"like_count"`    // 点赞量
+	CommentCount int64  `json:"comment_count"` // 评论数
+	CreatedAt    string `json:"created_at"`    // 创建时间
+	UpdatedAt    string `json:"updated_at"`    // 更新时间
+	DeleteAt     string `json:"delete_at"`     // 删除时间
+}

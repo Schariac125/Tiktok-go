@@ -12,6 +12,23 @@ type BindMFAResp struct {
 	Base Status `json:"base"` // 响应状态
 }
 
+type DeleteVideoReq struct {
+	Id int64 `json:"id"` // ID 编号
+}
+
+type DeleteVideoResp struct {
+	Base Status `json:"base"` // 响应状态
+}
+
+type FeedVideoReq struct {
+	LastestTime string `form:"lastest_time,optional"` // 有就返回该时间后的视频流
+}
+
+type FeedVideoResp struct {
+	Base Status        `json:"base"` // 响应状态
+	Data VideoFeedData `json:"data"` // 视频流
+}
+
 type GetMFAQrcodeResp struct {
 	Base Status    `json:"base"` // 响应状态
 	Data MFAQrcode `json:"data"` // MFA 二维码
@@ -24,6 +41,17 @@ type GetUserInfoReq struct {
 type GetUserInfoResp struct {
 	Base Status `json:"base"` // 响应状态
 	Data User   `json:"data"` // 用户信息
+}
+
+type ListVideoReq struct {
+	UserId   int64 `form:"user_id"`   // 要查看的用户 id
+	PageNum  int64 `form:"page_num"`  // 页码
+	PageSize int64 `form:"page_size"` // 每页数量
+}
+
+type ListVideoResp struct {
+	Base Status        `json:"base"` // 响应状态
+	Data VideoPageData `json:"data"` // 视频列表
 }
 
 type LoginReq struct {
@@ -44,6 +72,20 @@ type MFAQrcode struct {
 	Qrcode string `json:"qrcode"` // base64 编码后的 qrcode
 }
 
+type PopularVideoReq struct {
+	PageSize int64 `form:"page_size,optional"` // 每页数量
+	PageNum  int64 `form:"page_num,optional"`  // 页码
+}
+
+type PopularVideoResp struct {
+	Base Status        `json:"base"` // 响应状态
+	Data VideoFeedData `json:"data"` // 视频列表
+}
+
+type PublishVideoResp struct {
+	Base Status `json:"base"` // 响应状态
+}
+
 type RegisterReq struct {
 	Username string `json:"username"` // 用户名
 	Password string `json:"password"` // 密码
@@ -51,6 +93,20 @@ type RegisterReq struct {
 
 type RegisterResp struct {
 	Base Status `json:"base"` // 响应状态
+}
+
+type SearchVideoReq struct {
+	Keywords string `form:"keywords"`           // 关键词，匹配标题和描述
+	PageSize int64  `form:"page_size"`          // 每页数量
+	PageNum  int64  `form:"page_num"`           // 页码
+	FromDate int64  `form:"from_date,optional"` // 起始时间
+	ToDate   int64  `form:"to_date,optional"`   // 结束时间
+	Username string `form:"username,optional"`  // 如果有，则代表查某个特定用户的
+}
+
+type SearchVideoResp struct {
+	Base Status        `json:"base"` // 响应状态
+	Data VideoPageData `json:"data"` // 搜索结果
 }
 
 type Status struct {
@@ -70,4 +126,28 @@ type User struct {
 	CreateAt  string `json:"create_at"`  // 创建时间
 	UpdatedAt string `json:"updated_at"` // 更新时间
 	DeleteAt  string `json:"delete_at"`  // 软删除时间
+}
+
+type Video struct {
+	Id           int64  `json:"id"`            // ID 编号
+	UserId       int64  `json:"user_id"`       // 视频作者 id
+	VideoUrl     string `json:"video_url"`     // 视频链接
+	CoverUrl     string `json:"cover_url"`     // 封面链接
+	Title        string `json:"title"`         // 视频标题
+	Description  string `json:"description"`   // 视频描述
+	VisitCount   int64  `json:"visit_count"`   // 观看量
+	LikeCount    int64  `json:"like_count"`    // 点赞量
+	CommentCount int64  `json:"comment_count"` // 评论数
+	CreatedAt    string `json:"created_at"`    // 创建时间
+	UpdatedAt    string `json:"updated_at"`    // 更新时间
+	DeleteAt     string `json:"delete_at"`     // 删除时间
+}
+
+type VideoFeedData struct {
+	Items []Video `json:"items"` // 视频列表
+}
+
+type VideoPageData struct {
+	Items []Video `json:"items"` // 视频列表
+	Total int64   `json:"total"` // 总数
 }

@@ -1,0 +1,40 @@
+syntax = "v1"
+
+import "../model.api"
+
+// 视频模块 —— 需要登录鉴权的路由
+// 请求头携带 Access-Token、Refresh-Token，由 AuthMiddleware 统一校验
+
+type (
+	// 投稿响应
+	PublishVideoResp {
+		Base Status `json:"base"` // 响应状态
+	}
+
+	// 删除视频请求
+	DeleteVideoReq {
+		Id int64 `json:"id"` // ID 编号
+	}
+
+	// 删除视频响应
+	DeleteVideoResp {
+		Base Status `json:"base"` // 响应状态
+	}
+)
+
+@server (
+	prefix:     /video
+	group:      video
+	middleware: AuthMiddleware
+)
+service gateway {
+	// 视频投稿
+	// 以 multipart/form-data 上传，字段 data 为视频原始文件（必填），
+	// cover 为封面文件（可省略），title、description 为表单字段，在 handler 中解析
+	@handler publishVideo
+	post /publish returns (PublishVideoResp)
+
+	// 删除视频
+	@handler deleteVideo
+	delete /delete (DeleteVideoReq) returns (DeleteVideoResp)
+}

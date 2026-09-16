@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	user "tiktok-go/app/gateway/api/internal/handler/user"
+	video "tiktok-go/app/gateway/api/internal/handler/video"
 	"tiktok-go/app/gateway/api/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -65,5 +66,50 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/auth/mfa"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodGet,
+				Path:    "/feed",
+				Handler: video.FeedVideoHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/list",
+				Handler: video.ListVideoHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/popular",
+				Handler: video.PopularVideoHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/search",
+				Handler: video.SearchVideoHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/video"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.AuthMiddleware},
+			[]rest.Route{
+				{
+					Method:  http.MethodDelete,
+					Path:    "/delete",
+					Handler: video.DeleteVideoHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPost,
+					Path:    "/publish",
+					Handler: video.PublishVideoHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/video"),
 	)
 }
