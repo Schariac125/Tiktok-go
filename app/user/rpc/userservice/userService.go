@@ -14,20 +14,22 @@ import (
 )
 
 type (
-	BindMFAReq       = user.BindMFAReq
-	BindMFAResp      = user.BindMFAResp
-	GetMFAQrcodeReq  = user.GetMFAQrcodeReq
-	GetMFAQrcodeResp = user.GetMFAQrcodeResp
-	GetUserInfoReq   = user.GetUserInfoReq
-	GetUserInfoResp  = user.GetUserInfoResp
-	LoginReq         = user.LoginReq
-	LoginResp        = user.LoginResp
-	RegisterReq      = user.RegisterReq
-	RegisterResp     = user.RegisterResp
-	Status           = user.Status
-	UploadAvatarReq  = user.UploadAvatarReq
-	UploadAvatarResp = user.UploadAvatarResp
-	User             = user.User
+	BindMFAReq            = user.BindMFAReq
+	BindMFAResp           = user.BindMFAResp
+	GetMFAQrcodeReq       = user.GetMFAQrcodeReq
+	GetMFAQrcodeResp      = user.GetMFAQrcodeResp
+	GetUserByUsernameReq  = user.GetUserByUsernameReq
+	GetUserByUsernameResp = user.GetUserByUsernameResp
+	GetUserInfoReq        = user.GetUserInfoReq
+	GetUserInfoResp       = user.GetUserInfoResp
+	LoginReq              = user.LoginReq
+	LoginResp             = user.LoginResp
+	RegisterReq           = user.RegisterReq
+	RegisterResp          = user.RegisterResp
+	Status                = user.Status
+	UploadAvatarReq       = user.UploadAvatarReq
+	UploadAvatarResp      = user.UploadAvatarResp
+	User                  = user.User
 
 	UserService interface {
 		// 注册 POST /user/register
@@ -42,6 +44,8 @@ type (
 		GetMFAQrcode(ctx context.Context, in *GetMFAQrcodeReq, opts ...grpc.CallOption) (*GetMFAQrcodeResp, error)
 		// 绑定 MFA POST /auth/mfa/bind
 		BindMFA(ctx context.Context, in *BindMFAReq, opts ...grpc.CallOption) (*BindMFAResp, error)
+		// 按用户名查用户，供其他服务把用户名解析成 user_id（如视频搜索按作者筛选）
+		GetUserByUsername(ctx context.Context, in *GetUserByUsernameReq, opts ...grpc.CallOption) (*GetUserByUsernameResp, error)
 	}
 
 	defaultUserService struct {
@@ -89,4 +93,10 @@ func (m *defaultUserService) GetMFAQrcode(ctx context.Context, in *GetMFAQrcodeR
 func (m *defaultUserService) BindMFA(ctx context.Context, in *BindMFAReq, opts ...grpc.CallOption) (*BindMFAResp, error) {
 	client := user.NewUserServiceClient(m.cli.Conn())
 	return client.BindMFA(ctx, in, opts...)
+}
+
+// 按用户名查用户，供其他服务把用户名解析成 user_id（如视频搜索按作者筛选）
+func (m *defaultUserService) GetUserByUsername(ctx context.Context, in *GetUserByUsernameReq, opts ...grpc.CallOption) (*GetUserByUsernameResp, error) {
+	client := user.NewUserServiceClient(m.cli.Conn())
+	return client.GetUserByUsername(ctx, in, opts...)
 }

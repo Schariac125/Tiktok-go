@@ -96,6 +96,17 @@ message BindMFAResp {
   Status base = 1;
 }
 
+// ------- 按用户名查用户 -------
+
+message GetUserByUsernameReq {
+  string username = 1; // 用户名
+}
+
+message GetUserByUsernameResp {
+  Status base = 1;
+  User data = 2;
+}
+
 service UserService {
   // 注册 POST /user/register
   rpc Register(RegisterReq) returns (RegisterResp);
@@ -109,4 +120,6 @@ service UserService {
   rpc GetMFAQrcode(GetMFAQrcodeReq) returns (GetMFAQrcodeResp);
   // 绑定 MFA POST /auth/mfa/bind
   rpc BindMFA(BindMFAReq) returns (BindMFAResp);
+  // 按用户名查用户，供其他服务把用户名解析成 user_id（如视频搜索按作者筛选）
+  rpc GetUserByUsername(GetUserByUsernameReq) returns (GetUserByUsernameResp);
 }

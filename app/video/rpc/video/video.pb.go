@@ -838,9 +838,9 @@ type SearchVideoReq struct {
 	Keywords      string                 `protobuf:"bytes,1,opt,name=keywords,proto3" json:"keywords,omitempty"`                  // 关键词，匹配标题和描述
 	PageSize      int64                  `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"` // 每页数量
 	PageNum       int64                  `protobuf:"varint,3,opt,name=page_num,json=pageNum,proto3" json:"page_num,omitempty"`    // 页码
-	FromDate      int64                  `protobuf:"varint,4,opt,name=from_date,json=fromDate,proto3" json:"from_date,omitempty"` // 起始时间
-	ToDate        int64                  `protobuf:"varint,5,opt,name=to_date,json=toDate,proto3" json:"to_date,omitempty"`       // 结束时间
-	Username      string                 `protobuf:"bytes,6,opt,name=username,proto3" json:"username,omitempty"`                  // 如果有，则代表查某个特定用户的
+	FromDate      int64                  `protobuf:"varint,4,opt,name=from_date,json=fromDate,proto3" json:"from_date,omitempty"` // 起始时间，Unix 秒，0 表示不限
+	ToDate        int64                  `protobuf:"varint,5,opt,name=to_date,json=toDate,proto3" json:"to_date,omitempty"`       // 结束时间，Unix 秒，0 表示不限
+	UserId        int64                  `protobuf:"varint,6,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`       // 按作者筛选，0 表示不限；网关把 username 解析成 user_id 后传入
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -910,11 +910,11 @@ func (x *SearchVideoReq) GetToDate() int64 {
 	return 0
 }
 
-func (x *SearchVideoReq) GetUsername() string {
+func (x *SearchVideoReq) GetUserId() int64 {
 	if x != nil {
-		return x.Username
+		return x.UserId
 	}
-	return ""
+	return 0
 }
 
 type SearchVideoResp struct {
@@ -1030,14 +1030,14 @@ const file_api_video_video_proto_rawDesc = "" +
 	"\bpage_num\x18\x02 \x01(\x03R\apageNum\"_\n" +
 	"\x10PopularVideoResp\x12!\n" +
 	"\x04base\x18\x01 \x01(\v2\r.video.StatusR\x04base\x12(\n" +
-	"\x04data\x18\x02 \x01(\v2\x14.video.VideoFeedDataR\x04data\"\xb6\x01\n" +
+	"\x04data\x18\x02 \x01(\v2\x14.video.VideoFeedDataR\x04data\"\xb3\x01\n" +
 	"\x0eSearchVideoReq\x12\x1a\n" +
 	"\bkeywords\x18\x01 \x01(\tR\bkeywords\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x03R\bpageSize\x12\x19\n" +
 	"\bpage_num\x18\x03 \x01(\x03R\apageNum\x12\x1b\n" +
 	"\tfrom_date\x18\x04 \x01(\x03R\bfromDate\x12\x17\n" +
-	"\ato_date\x18\x05 \x01(\x03R\x06toDate\x12\x1a\n" +
-	"\busername\x18\x06 \x01(\tR\busername\"^\n" +
+	"\ato_date\x18\x05 \x01(\x03R\x06toDate\x12\x17\n" +
+	"\auser_id\x18\x06 \x01(\x03R\x06userId\"^\n" +
 	"\x0fSearchVideoResp\x12!\n" +
 	"\x04base\x18\x01 \x01(\v2\r.video.StatusR\x04base\x12(\n" +
 	"\x04data\x18\x02 \x01(\v2\x14.video.VideoPageDataR\x04data2\xfc\x02\n" +

@@ -106,9 +106,9 @@ message SearchVideoReq {
   string keywords = 1; // 关键词，匹配标题和描述
   int64 page_size = 2; // 每页数量
   int64 page_num = 3;  // 页码
-  int64 from_date = 4; // 起始时间
-  int64 to_date = 5;   // 结束时间
-  string username = 6; // 如果有，则代表查某个特定用户的
+  int64 from_date = 4; // 起始时间，Unix 秒，0 表示不限
+  int64 to_date = 5;   // 结束时间，Unix 秒，0 表示不限
+  int64 user_id = 6;   // 按作者筛选，0 表示不限；网关把 username 解析成 user_id 后传入
 }
 
 message SearchVideoResp {

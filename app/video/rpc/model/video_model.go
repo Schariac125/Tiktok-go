@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/cache"
@@ -28,6 +29,10 @@ type (
 		FindPopular(ctx context.Context, limit int64) ([]*Video, error)
 		// FeedLatest 取首页视频流：未删除的视频按发布时间倒序。
 		FeedLatest(ctx context.Context, since time.Time, limit int64) ([]*Video, error)
+		// Search 按关键词/作者/时间范围搜索视频，分页返回，最新发布的在前。
+		Search(ctx context.Context, q SearchQuery) ([]*Video, error)
+		// CountSearch 统计符合搜索条件的视频总数，用于分页。
+		CountSearch(ctx context.Context, q SearchQuery) (int64, error)
 	}
 
 	customVideoModel struct {
@@ -122,4 +127,71 @@ func (m *customVideoModel) FeedLatest(ctx context.Context, since time.Time, limi
 		return nil, err
 	}
 	return list, nil
+}
+
+// SearchQuery 视频搜索的过滤条件，零值字段表示不限制。
+type SearchQuery struct {
+	Keywords string // 匹配标题或描述
+	UserId   uint64 // 按作者筛选
+	From     int64  // 起始时间，Unix 秒
+	To       int64  // 结束时间，Unix 秒
+	Offset   int64  // 分页偏移
+	Limit    int64  // 每页数量
+}
+
+// buildSearchWhere 拼出搜索的 where 子句与参数，Search 与 CountSearch 共用。
+// 关键词用 LIKE %kw% 匹配标题和描述，前后都有通配符走不了索引；
+// 数据量上来后应换成全文索引（FULLTEXT）或独立检索引擎。
+// 时间条件用 from_unixtime 转换，会按 MySQL 会话时区（现为 +08:00）解释。
+func buildSearchWhere(q SearchQuery) (string, []any) {
+	where := "`delete_at` is null"
+	args := make([]any, 0, 6)
+
+	if kw := strings.TrimSpace(q.Keywords); kw != "" {
+		where += " and (`title` like ? or `description` like ?)"
+		like := "%" + kw + "%"
+		args = append(args, like, like)
+	}
+	if q.UserId > 0 {
+		where += " and `user_id` = ?"
+		args = append(args, q.UserId)
+	}
+	if q.From > 0 {
+		where += " and `created_at` >= from_unixtime(?)"
+		args = append(args, q.From)
+	}
+	if q.To > 0 {
+		where += " and `created_at` <= from_unixtime(?)"
+		args = append(args, q.To)
+	}
+
+	return where, args
+}
+
+// Search 按条件搜索视频并分页返回，最新发布的在前。
+func (m *customVideoModel) Search(ctx context.Context, q SearchQuery) ([]*Video, error) {
+	where, args := buildSearchWhere(q)
+	query := fmt.Sprintf("select %s from %s where %s order by `id` desc limit ? offset ?",
+		videoRows, m.table, where)
+	args = append(args, q.Limit, q.Offset)
+
+	var list []*Video
+	if err := m.QueryRowsNoCacheCtx(ctx, &list, query, args...); err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+// CountSearch 统计符合搜索条件的视频总数。
+func (m *customVideoModel) CountSearch(ctx context.Context, q SearchQuery) (int64, error) {
+	where, args := buildSearchWhere(q)
+	query := fmt.Sprintf("select count(*) as total from %s where %s", m.table, where)
+
+	var row struct {
+		Total int64 `db:"total"`
+	}
+	if err := m.QueryRowNoCacheCtx(ctx, &row, query, args...); err != nil {
+		return 0, err
+	}
+	return row.Total, nil
 }

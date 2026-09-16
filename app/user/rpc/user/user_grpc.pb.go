@@ -19,12 +19,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_Register_FullMethodName     = "/user.UserService/Register"
-	UserService_Login_FullMethodName        = "/user.UserService/Login"
-	UserService_GetUserInfo_FullMethodName  = "/user.UserService/GetUserInfo"
-	UserService_UploadAvatar_FullMethodName = "/user.UserService/UploadAvatar"
-	UserService_GetMFAQrcode_FullMethodName = "/user.UserService/GetMFAQrcode"
-	UserService_BindMFA_FullMethodName      = "/user.UserService/BindMFA"
+	UserService_Register_FullMethodName          = "/user.UserService/Register"
+	UserService_Login_FullMethodName             = "/user.UserService/Login"
+	UserService_GetUserInfo_FullMethodName       = "/user.UserService/GetUserInfo"
+	UserService_UploadAvatar_FullMethodName      = "/user.UserService/UploadAvatar"
+	UserService_GetMFAQrcode_FullMethodName      = "/user.UserService/GetMFAQrcode"
+	UserService_BindMFA_FullMethodName           = "/user.UserService/BindMFA"
+	UserService_GetUserByUsername_FullMethodName = "/user.UserService/GetUserByUsername"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -43,6 +44,8 @@ type UserServiceClient interface {
 	GetMFAQrcode(ctx context.Context, in *GetMFAQrcodeReq, opts ...grpc.CallOption) (*GetMFAQrcodeResp, error)
 	// 绑定 MFA POST /auth/mfa/bind
 	BindMFA(ctx context.Context, in *BindMFAReq, opts ...grpc.CallOption) (*BindMFAResp, error)
+	// 按用户名查用户，供其他服务把用户名解析成 user_id（如视频搜索按作者筛选）
+	GetUserByUsername(ctx context.Context, in *GetUserByUsernameReq, opts ...grpc.CallOption) (*GetUserByUsernameResp, error)
 }
 
 type userServiceClient struct {
@@ -113,6 +116,16 @@ func (c *userServiceClient) BindMFA(ctx context.Context, in *BindMFAReq, opts ..
 	return out, nil
 }
 
+func (c *userServiceClient) GetUserByUsername(ctx context.Context, in *GetUserByUsernameReq, opts ...grpc.CallOption) (*GetUserByUsernameResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetUserByUsernameResp)
+	err := c.cc.Invoke(ctx, UserService_GetUserByUsername_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -129,6 +142,8 @@ type UserServiceServer interface {
 	GetMFAQrcode(context.Context, *GetMFAQrcodeReq) (*GetMFAQrcodeResp, error)
 	// 绑定 MFA POST /auth/mfa/bind
 	BindMFA(context.Context, *BindMFAReq) (*BindMFAResp, error)
+	// 按用户名查用户，供其他服务把用户名解析成 user_id（如视频搜索按作者筛选）
+	GetUserByUsername(context.Context, *GetUserByUsernameReq) (*GetUserByUsernameResp, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -156,6 +171,9 @@ func (UnimplementedUserServiceServer) GetMFAQrcode(context.Context, *GetMFAQrcod
 }
 func (UnimplementedUserServiceServer) BindMFA(context.Context, *BindMFAReq) (*BindMFAResp, error) {
 	return nil, status.Error(codes.Unimplemented, "method BindMFA not implemented")
+}
+func (UnimplementedUserServiceServer) GetUserByUsername(context.Context, *GetUserByUsernameReq) (*GetUserByUsernameResp, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetUserByUsername not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -286,6 +304,24 @@ func _UserService_BindMFA_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_GetUserByUsername_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserByUsernameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetUserByUsername(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetUserByUsername_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetUserByUsername(ctx, req.(*GetUserByUsernameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -316,6 +352,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BindMFA",
 			Handler:    _UserService_BindMFA_Handler,
+		},
+		{
+			MethodName: "GetUserByUsername",
+			Handler:    _UserService_GetUserByUsername_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

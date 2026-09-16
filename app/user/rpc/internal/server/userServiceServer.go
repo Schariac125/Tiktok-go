@@ -58,3 +58,9 @@ func (s *UserServiceServer) BindMFA(ctx context.Context, in *user.BindMFAReq) (*
 	l := logic.NewBindMFALogic(ctx, s.svcCtx)
 	return l.BindMFA(in)
 }
+
+// 按用户名查用户，供其他服务把用户名解析成 user_id（如视频搜索按作者筛选）
+func (s *UserServiceServer) GetUserByUsername(ctx context.Context, in *user.GetUserByUsernameReq) (*user.GetUserByUsernameResp, error) {
+	l := logic.NewGetUserByUsernameLogic(ctx, s.svcCtx)
+	return l.GetUserByUsername(in)
+}

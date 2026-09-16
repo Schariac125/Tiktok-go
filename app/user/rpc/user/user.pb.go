@@ -799,6 +799,102 @@ func (x *BindMFAResp) GetBase() *Status {
 	return nil
 }
 
+type GetUserByUsernameReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"` // 用户名
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetUserByUsernameReq) Reset() {
+	*x = GetUserByUsernameReq{}
+	mi := &file_api_user_user_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetUserByUsernameReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUserByUsernameReq) ProtoMessage() {}
+
+func (x *GetUserByUsernameReq) ProtoReflect() protoreflect.Message {
+	mi := &file_api_user_user_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUserByUsernameReq.ProtoReflect.Descriptor instead.
+func (*GetUserByUsernameReq) Descriptor() ([]byte, []int) {
+	return file_api_user_user_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *GetUserByUsernameReq) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+type GetUserByUsernameResp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Base          *Status                `protobuf:"bytes,1,opt,name=base,proto3" json:"base,omitempty"`
+	Data          *User                  `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetUserByUsernameResp) Reset() {
+	*x = GetUserByUsernameResp{}
+	mi := &file_api_user_user_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetUserByUsernameResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUserByUsernameResp) ProtoMessage() {}
+
+func (x *GetUserByUsernameResp) ProtoReflect() protoreflect.Message {
+	mi := &file_api_user_user_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUserByUsernameResp.ProtoReflect.Descriptor instead.
+func (*GetUserByUsernameResp) Descriptor() ([]byte, []int) {
+	return file_api_user_user_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *GetUserByUsernameResp) GetBase() *Status {
+	if x != nil {
+		return x.Base
+	}
+	return nil
+}
+
+func (x *GetUserByUsernameResp) GetData() *User {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
 var File_api_user_user_proto protoreflect.FileDescriptor
 
 const file_api_user_user_proto_rawDesc = "" +
@@ -856,14 +952,21 @@ const file_api_user_user_proto_rawDesc = "" +
 	"\x04code\x18\x02 \x01(\tR\x04code\x12\x16\n" +
 	"\x06secret\x18\x03 \x01(\tR\x06secret\"/\n" +
 	"\vBindMFAResp\x12 \n" +
-	"\x04base\x18\x01 \x01(\v2\f.user.StatusR\x04base2\xd4\x02\n" +
+	"\x04base\x18\x01 \x01(\v2\f.user.StatusR\x04base\"2\n" +
+	"\x14GetUserByUsernameReq\x12\x1a\n" +
+	"\busername\x18\x01 \x01(\tR\busername\"Y\n" +
+	"\x15GetUserByUsernameResp\x12 \n" +
+	"\x04base\x18\x01 \x01(\v2\f.user.StatusR\x04base\x12\x1e\n" +
+	"\x04data\x18\x02 \x01(\v2\n" +
+	".user.UserR\x04data2\xa2\x03\n" +
 	"\vUserService\x121\n" +
 	"\bRegister\x12\x11.user.RegisterReq\x1a\x12.user.RegisterResp\x12(\n" +
 	"\x05Login\x12\x0e.user.LoginReq\x1a\x0f.user.LoginResp\x12:\n" +
 	"\vGetUserInfo\x12\x14.user.GetUserInfoReq\x1a\x15.user.GetUserInfoResp\x12=\n" +
 	"\fUploadAvatar\x12\x15.user.UploadAvatarReq\x1a\x16.user.UploadAvatarResp\x12=\n" +
 	"\fGetMFAQrcode\x12\x15.user.GetMFAQrcodeReq\x1a\x16.user.GetMFAQrcodeResp\x12.\n" +
-	"\aBindMFA\x12\x10.user.BindMFAReq\x1a\x11.user.BindMFARespB\bZ\x06./userb\x06proto3"
+	"\aBindMFA\x12\x10.user.BindMFAReq\x1a\x11.user.BindMFAResp\x12L\n" +
+	"\x11GetUserByUsername\x12\x1a.user.GetUserByUsernameReq\x1a\x1b.user.GetUserByUsernameRespB\bZ\x06./userb\x06proto3"
 
 var (
 	file_api_user_user_proto_rawDescOnce sync.Once
@@ -877,22 +980,24 @@ func file_api_user_user_proto_rawDescGZIP() []byte {
 	return file_api_user_user_proto_rawDescData
 }
 
-var file_api_user_user_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_api_user_user_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_api_user_user_proto_goTypes = []any{
-	(*Status)(nil),           // 0: user.Status
-	(*User)(nil),             // 1: user.User
-	(*RegisterReq)(nil),      // 2: user.RegisterReq
-	(*RegisterResp)(nil),     // 3: user.RegisterResp
-	(*LoginReq)(nil),         // 4: user.LoginReq
-	(*LoginResp)(nil),        // 5: user.LoginResp
-	(*GetUserInfoReq)(nil),   // 6: user.GetUserInfoReq
-	(*GetUserInfoResp)(nil),  // 7: user.GetUserInfoResp
-	(*UploadAvatarReq)(nil),  // 8: user.UploadAvatarReq
-	(*UploadAvatarResp)(nil), // 9: user.UploadAvatarResp
-	(*GetMFAQrcodeReq)(nil),  // 10: user.GetMFAQrcodeReq
-	(*GetMFAQrcodeResp)(nil), // 11: user.GetMFAQrcodeResp
-	(*BindMFAReq)(nil),       // 12: user.BindMFAReq
-	(*BindMFAResp)(nil),      // 13: user.BindMFAResp
+	(*Status)(nil),                // 0: user.Status
+	(*User)(nil),                  // 1: user.User
+	(*RegisterReq)(nil),           // 2: user.RegisterReq
+	(*RegisterResp)(nil),          // 3: user.RegisterResp
+	(*LoginReq)(nil),              // 4: user.LoginReq
+	(*LoginResp)(nil),             // 5: user.LoginResp
+	(*GetUserInfoReq)(nil),        // 6: user.GetUserInfoReq
+	(*GetUserInfoResp)(nil),       // 7: user.GetUserInfoResp
+	(*UploadAvatarReq)(nil),       // 8: user.UploadAvatarReq
+	(*UploadAvatarResp)(nil),      // 9: user.UploadAvatarResp
+	(*GetMFAQrcodeReq)(nil),       // 10: user.GetMFAQrcodeReq
+	(*GetMFAQrcodeResp)(nil),      // 11: user.GetMFAQrcodeResp
+	(*BindMFAReq)(nil),            // 12: user.BindMFAReq
+	(*BindMFAResp)(nil),           // 13: user.BindMFAResp
+	(*GetUserByUsernameReq)(nil),  // 14: user.GetUserByUsernameReq
+	(*GetUserByUsernameResp)(nil), // 15: user.GetUserByUsernameResp
 }
 var file_api_user_user_proto_depIdxs = []int32{
 	0,  // 0: user.RegisterResp.base:type_name -> user.Status
@@ -903,23 +1008,27 @@ var file_api_user_user_proto_depIdxs = []int32{
 	0,  // 5: user.UploadAvatarResp.base:type_name -> user.Status
 	0,  // 6: user.GetMFAQrcodeResp.base:type_name -> user.Status
 	0,  // 7: user.BindMFAResp.base:type_name -> user.Status
-	2,  // 8: user.UserService.Register:input_type -> user.RegisterReq
-	4,  // 9: user.UserService.Login:input_type -> user.LoginReq
-	6,  // 10: user.UserService.GetUserInfo:input_type -> user.GetUserInfoReq
-	8,  // 11: user.UserService.UploadAvatar:input_type -> user.UploadAvatarReq
-	10, // 12: user.UserService.GetMFAQrcode:input_type -> user.GetMFAQrcodeReq
-	12, // 13: user.UserService.BindMFA:input_type -> user.BindMFAReq
-	3,  // 14: user.UserService.Register:output_type -> user.RegisterResp
-	5,  // 15: user.UserService.Login:output_type -> user.LoginResp
-	7,  // 16: user.UserService.GetUserInfo:output_type -> user.GetUserInfoResp
-	9,  // 17: user.UserService.UploadAvatar:output_type -> user.UploadAvatarResp
-	11, // 18: user.UserService.GetMFAQrcode:output_type -> user.GetMFAQrcodeResp
-	13, // 19: user.UserService.BindMFA:output_type -> user.BindMFAResp
-	14, // [14:20] is the sub-list for method output_type
-	8,  // [8:14] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	0,  // 8: user.GetUserByUsernameResp.base:type_name -> user.Status
+	1,  // 9: user.GetUserByUsernameResp.data:type_name -> user.User
+	2,  // 10: user.UserService.Register:input_type -> user.RegisterReq
+	4,  // 11: user.UserService.Login:input_type -> user.LoginReq
+	6,  // 12: user.UserService.GetUserInfo:input_type -> user.GetUserInfoReq
+	8,  // 13: user.UserService.UploadAvatar:input_type -> user.UploadAvatarReq
+	10, // 14: user.UserService.GetMFAQrcode:input_type -> user.GetMFAQrcodeReq
+	12, // 15: user.UserService.BindMFA:input_type -> user.BindMFAReq
+	14, // 16: user.UserService.GetUserByUsername:input_type -> user.GetUserByUsernameReq
+	3,  // 17: user.UserService.Register:output_type -> user.RegisterResp
+	5,  // 18: user.UserService.Login:output_type -> user.LoginResp
+	7,  // 19: user.UserService.GetUserInfo:output_type -> user.GetUserInfoResp
+	9,  // 20: user.UserService.UploadAvatar:output_type -> user.UploadAvatarResp
+	11, // 21: user.UserService.GetMFAQrcode:output_type -> user.GetMFAQrcodeResp
+	13, // 22: user.UserService.BindMFA:output_type -> user.BindMFAResp
+	15, // 23: user.UserService.GetUserByUsername:output_type -> user.GetUserByUsernameResp
+	17, // [17:24] is the sub-list for method output_type
+	10, // [10:17] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_api_user_user_proto_init() }
@@ -933,7 +1042,7 @@ func file_api_user_user_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_user_user_proto_rawDesc), len(file_api_user_user_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
