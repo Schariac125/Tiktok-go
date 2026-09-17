@@ -1,0 +1,129 @@
+syntax = "proto3";
+
+package interaction;
+
+option go_package = "./interaction";
+
+// ------- 数据模型 -------
+
+// 响应状态
+message Status {
+  int32 code = 1; // 状态码
+  string msg = 2; // 提示信息
+}
+
+// 视频，字段与 video.proto 的 Video 对齐，用于点赞列表返回
+message Video {
+  int64 id = 1;
+  int64 user_id = 2;
+  string video_url = 3;
+  string cover_url = 4;
+  string title = 5;
+  string description = 6;
+  int64 visit_count = 7;
+  int64 like_count = 8;
+  int64 comment_count = 9;
+  string created_at = 10;
+  string updated_at = 11;
+  string delete_at = 12;
+}
+
+// 评论
+message Comment {
+  int64 id = 1;           // ID 编号
+  int64 user_id = 2;      // 发布者用户 id
+  int64 video_id = 3;     // 视频 id
+  int64 parent_id = 4;    // 父评论 id，0 表示直接评论视频
+  int64 like_count = 5;   // 点赞数
+  int64 child_count = 6;  // 子评论数
+  string content = 7;     // 评论文本本身
+  string created_at = 8;  // 创建时间
+  string updated_at = 9;  // 更新时间
+  string deleted_at = 10; // 删除时间
+}
+
+// 分页视频数据
+message VideoPageData {
+  repeated Video items = 1;
+  int64 total = 2;
+}
+
+// ------- 点赞 -------
+
+message LikeReq {
+  int64 user_id = 1;    // 点赞者 id（网关从登录态注入）
+  int64 video_id = 2;   // 视频 id，与 comment_id 至少有一个
+  int64 comment_id = 3; // 评论 id
+}
+
+message LikeResp {
+  Status base = 1;
+}
+
+message UnlikeReq {
+  int64 user_id = 1;    // 取消点赞的人（网关从登录态注入）
+  int64 video_id = 2;   // 视频 id，与 comment_id 至少有一个
+  int64 comment_id = 3; // 评论 id
+}
+
+message UnlikeResp {
+  Status base = 1;
+}
+
+message ListLikeReq {
+  int64 user_id = 1; // 要查看的用户 id
+}
+
+message ListLikeResp {
+  Status base = 1;
+  VideoPageData data = 2;
+}
+
+// ------- 评论 -------
+
+message PublishCommentReq {
+  int64 user_id = 1;    // 发布者 id（网关从登录态注入）
+  int64 video_id = 2;   // 视频 id，与 comment_id 至少有一个
+  int64 comment_id = 3; // 父评论 id，填了就是对这条评论的回复
+  string content = 4;   // 评论内容
+}
+
+message PublishCommentResp {
+  Status base = 1;
+}
+
+message DeleteCommentReq {
+  int64 user_id = 1;    // 操作者 id（网关从登录态注入），只允许删自己的评论
+  int64 comment_id = 2; // 评论 id
+}
+
+message DeleteCommentResp {
+  Status base = 1;
+}
+
+message ListCommentReq {
+  int64 video_id = 1;   // 视频 id，与 comment_id 至少有一个
+  int64 comment_id = 2; // 父评论 id，查该评论下的回复
+  int64 page_num = 3;   // 页码
+  int64 page_size = 4;  // 每页数量
+}
+
+message ListCommentResp {
+  Status base = 1;
+  repeated Comment items = 2; // 评论列表
+}
+
+service InteractionService {
+  // 点赞 POST /like/action
+  rpc Like(LikeReq) returns (LikeResp);
+  // 取消点赞 DELETE /like/delete
+  rpc Unlike(UnlikeReq) returns (UnlikeResp);
+  // 查看用户点赞的视频列表 GET /like/list
+  rpc ListLike(ListLikeReq) returns (ListLikeResp);
+  // 发表评论 POST /comment/publish
+  rpc PublishComment(PublishCommentReq) returns (PublishCommentResp);
+  // 删除评论 DELETE /comment/delete
+  rpc DeleteComment(DeleteCommentReq) returns (DeleteCommentResp);
+  // 查看评论列表 GET /comment/list
+  rpc ListComment(ListCommentReq) returns (ListCommentResp);
+}

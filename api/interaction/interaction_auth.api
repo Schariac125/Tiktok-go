@@ -1,0 +1,82 @@
+syntax = "v1"
+
+import "../model.api"
+
+// 互动模块 —— 需要登录鉴权的路由
+// 请求头携带 Access-Token、Refresh-Token，由 AuthMiddleware 统一校验
+
+type (
+	// 点赞请求
+	LikeReq {
+		VideoId   int64 `json:"video_id,optional"`   // 视频 id，与 comment_id 至少有一个
+		CommentId int64 `json:"comment_id,optional"` // 评论 id
+	}
+
+	// 点赞响应
+	LikeResp {
+		Base Status `json:"base"` // 响应状态
+	}
+
+	// 取消点赞请求
+	UnlikeReq {
+		VideoId   int64 `json:"video_id,optional"`   // 视频 id，与 comment_id 至少有一个
+		CommentId int64 `json:"comment_id,optional"` // 评论 id
+	}
+
+	// 取消点赞响应
+	UnlikeResp {
+		Base Status `json:"base"` // 响应状态
+	}
+
+	// 发表评论请求
+	PublishCommentReq {
+		VideoId   int64  `json:"video_id,optional"`   // 视频 id，与 comment_id 至少有一个
+		CommentId int64  `json:"comment_id,optional"` // 父评论 id，填了就是对这条评论的回复
+		Content   string `json:"content"`             // 评论内容
+	}
+
+	// 发表评论响应
+	PublishCommentResp {
+		Base Status `json:"base"` // 响应状态
+	}
+
+	// 删除评论请求
+	DeleteCommentReq {
+		CommentId int64 `json:"comment_id"` // 评论 id
+	}
+
+	// 删除评论响应
+	DeleteCommentResp {
+		Base Status `json:"base"` // 响应状态
+	}
+)
+
+@server (
+	prefix:     /like
+	group:      interaction
+	middleware: AuthMiddleware
+)
+service gateway {
+	// 点赞，接口文档要求高频操作走缓存、与数据库定时同步
+	@handler like
+	post /action (LikeReq) returns (LikeResp)
+
+	// 取消点赞，高频操作，硬删除
+	@handler unlike
+	delete /delete (UnlikeReq) returns (UnlikeResp)
+}
+
+@server (
+	prefix:     /comment
+	group:      interaction
+	middleware: AuthMiddleware
+)
+service gateway {
+	// 发表评论，可对视频评论，也可回复某条评论
+	@handler publishComment
+	post /publish (PublishCommentReq) returns (PublishCommentResp)
+
+	// 删除评论，软删除
+	@handler deleteComment
+	delete /delete (DeleteCommentReq) returns (DeleteCommentResp)
+}

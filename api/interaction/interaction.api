@@ -1,0 +1,60 @@
+syntax = "v1"
+
+import "../model.api"
+
+// 互动模块 —— 无需登录鉴权的路由
+//
+// 注意：query 参数必须用 form tag。go-zero 的 httpx.Parse 只在 form tag 上解析
+// query，写成 json tag 会直接报 field "xxx" is not set。
+
+type (
+	// 点赞列表请求，参数走 query
+	ListLikeReq {
+		UserId int64 `form:"user_id"` // 要查看的用户 id
+	}
+
+	// 点赞列表响应
+	ListLikeResp {
+		Base Status        `json:"base"` // 响应状态
+		Data VideoPageData `json:"data"` // 该用户点赞过的视频
+	}
+
+	// 评论列表请求，参数走 query
+	ListCommentReq {
+		VideoId   int64 `form:"video_id,optional"`   // 视频 id，与 comment_id 至少有一个
+		CommentId int64 `form:"comment_id,optional"` // 父评论 id，查某条评论下的回复
+		PageSize  int64 `form:"page_size,optional"`  // 每页数量
+		PageNum   int64 `form:"page_num,optional"`   // 页码
+	}
+
+	// 评论列表响应
+	ListCommentResp {
+		Base Status          `json:"base"` // 响应状态
+		Data CommentListData `json:"data"` // 评论列表
+	}
+
+	// 评论列表数据，该接口不返回总数
+	CommentListData {
+		Items []Comment `json:"items"` // 评论列表
+	}
+)
+
+@server (
+	prefix: /like
+	group:  interaction
+)
+service gateway {
+	// 查看某个用户点赞的视频列表
+	@handler listLike
+	get /list (ListLikeReq) returns (ListLikeResp)
+}
+
+@server (
+	prefix: /comment
+	group:  interaction
+)
+service gateway {
+	// 查看某个视频或评论的评论列表
+	@handler listComment
+	get /list (ListCommentReq) returns (ListCommentResp)
+}

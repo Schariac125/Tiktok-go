@@ -8,17 +8,6 @@ import "../model.api"
 // query，写成 json tag 会直接报 field "xxx" is not set。
 
 type (
-	// 分页视频数据，查看用户视频、搜索视频返回总数
-	VideoPageData {
-		Items []Video `json:"items"` // 视频列表
-		Total int64   `json:"total"` // 总数
-	}
-
-	// 视频流数据，首页视频流、热门排行榜不返回总数
-	VideoFeedData {
-		Items []Video `json:"items"` // 视频列表
-	}
-
 	// 查看用户视频请求，参数走 query
 	ListVideoReq {
 		UserId   int64 `form:"user_id"`   // 要查看的用户 id

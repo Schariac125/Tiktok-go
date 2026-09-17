@@ -1,6 +1,7 @@
 syntax = "v1"
 
-// 数据模型，对应《默认模块.md》的数据模型部分
+// 数据模型，对应《默认模块.md》的数据模型部分。
+// 除数据模型外，多个模块共用的响应结构（如视频列表的包装）也放在这里。
 
 // 响应状态
 type Status {
@@ -39,4 +40,29 @@ type Video {
 	CreatedAt    string `json:"created_at"`    // 创建时间
 	UpdatedAt    string `json:"updated_at"`    // 更新时间
 	DeleteAt     string `json:"delete_at"`     // 删除时间
+}
+
+// 评论
+type Comment {
+	Id         int64  `json:"id"`          // ID 编号
+	UserId     int64  `json:"user_id"`     // 发布者用户 id
+	VideoId    int64  `json:"video_id"`    // 视频 id
+	ParentId   int64  `json:"parent_id"`   // 父评论 id，可留空
+	LikeCount  int64  `json:"like_count"`  // 点赞数
+	ChildCount int64  `json:"child_count"` // 子评论数
+	Content    string `json:"content"`     // 评论文本本身
+	CreatedAt  string `json:"created_at"`  // 创建时间
+	UpdatedAt  string `json:"updated_at"`  // 更新时间
+	DeletedAt  string `json:"deleted_at"`  // 删除时间
+}
+
+// 分页视频数据，查看用户视频、搜索视频、点赞列表返回总数
+type VideoPageData {
+	Items []Video `json:"items"` // 视频列表
+	Total int64   `json:"total"` // 总数
+}
+
+// 视频流数据，首页视频流、热门排行榜不返回总数
+type VideoFeedData {
+	Items []Video `json:"items"` // 视频列表
 }
