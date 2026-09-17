@@ -1,0 +1,9 @@
+# 构建 context 是项目根，这些不需要进构建环境
+.git
+.gitignore
+bin/
+*.md
+Dockerfile
+**/Dockerfile
+.dockerignore
+migration/

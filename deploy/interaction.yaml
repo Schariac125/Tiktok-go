@@ -1,0 +1,22 @@
+# 容器内运行用的配置：中间件地址走 compose 的服务名，而非宿主机的 127.0.0.1
+Name: interaction.rpc
+ListenOn: 0.0.0.0:8082
+Etcd:
+  Hosts:
+  - etcd:2379
+  Key: interaction.rpc
+
+MySQL:
+  DataSource: root:350322@tcp(mysql:3306)/tiktok?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
+
+# model 缓存；点赞队列也走这个 redis
+CacheRedis:
+  - Host: redis:6379
+    Type: node
+
+# 组装点赞列表时要读视频信息
+VideoRpc:
+  Etcd:
+    Hosts:
+      - etcd:2379
+    Key: video.rpc

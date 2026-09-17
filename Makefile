@@ -35,6 +35,7 @@ BIN_DIR     := bin
 
 .DEFAULT_GOAL := generate
 .PHONY: generate api-build rpc-build model-build build \
+        image-build \
         infra-up infra-down infra-logs \
         run-gateway clean
 
@@ -83,6 +84,15 @@ build:
 		if [ ! -d app/$$m/rpc ]; then echo "跳过 $$m-rpc：app/$$m/rpc 不存在，请先 make rpc-build"; continue; fi; \
 		go build -o $(BIN_DIR)/$$m-rpc ./app/$$m/rpc || exit 1; \
 	done
+
+# 构建各服务镜像。Dockerfile 在服务目录下，但构建 context 是项目根（go.mod 在那里）
+image-build:
+	@for m in $(MODULES); do \
+		echo ">>> 构建 $$m-rpc 镜像"; \
+		docker build -f app/$$m/rpc/Dockerfile -t tiktok-go/$$m-rpc:latest . || exit 1; \
+	done
+	@echo ">>> 构建 gateway 镜像"
+	@docker build -f app/gateway/api/Dockerfile -t tiktok-go/gateway:latest .
 
 # 启动依赖中间件（etcd、mysql、redis），配置见 docker-compose.yml。
 # 三个数据卷由外部持有（compose 里标了 external），先建好再起容器，已存在时是空操作。

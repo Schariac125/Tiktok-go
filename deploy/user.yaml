@@ -1,0 +1,29 @@
+# 容器内运行用的配置：中间件地址走 compose 的服务名，而非宿主机的 127.0.0.1
+Name: user.rpc
+ListenOn: 0.0.0.0:8080
+Etcd:
+  Hosts:
+  - etcd:2379
+  Key: user.rpc
+
+MySQL:
+  DataSource: root:350322@tcp(mysql:3306)/tiktok?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
+
+# model 缓存
+CacheRedis:
+  - Host: redis:6379
+    Type: node
+
+# token 签发
+JWT:
+  AccessSecret: "tiktok-go-dev-secret-change-me"
+  AccessExpire: 2h
+  RefreshExpire: 168h
+
+# 阿里云 OSS（头像等对象存储）
+OSS:
+  Endpoint: "oss-cn-beijing.aliyuncs.com"
+  AccessKeyID: ""
+  AccessKeySecret: ""
+  BucketName: ""
+  Domain: ""

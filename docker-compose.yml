@@ -72,6 +72,107 @@ services:
       timeout: 3s
       retries: 10
 
+  # ---- 业务服务 ----
+  # 配置从 deploy/ 挂载：容器内中间件地址走 compose 服务名，与本地开发的 etc/*.yaml 不同。
+  # rpc 服务不对外暴露端口，只经 etcd 服务发现被网关调用。
+
+  user-rpc:
+    build:
+      context: .
+      dockerfile: app/user/rpc/Dockerfile
+    image: tiktok-go/user-rpc:latest
+    container_name: tiktok-user-rpc
+    restart: unless-stopped
+    depends_on:
+      etcd:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./deploy/user.yaml:/app/etc/user.yaml:ro
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "8080"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  video-rpc:
+    build:
+      context: .
+      dockerfile: app/video/rpc/Dockerfile
+    image: tiktok-go/video-rpc:latest
+    container_name: tiktok-video-rpc
+    restart: unless-stopped
+    depends_on:
+      etcd:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./deploy/video.yaml:/app/etc/video.yaml:ro
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "8081"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  interaction-rpc:
+    build:
+      context: .
+      dockerfile: app/interaction/rpc/Dockerfile
+    image: tiktok-go/interaction-rpc:latest
+    container_name: tiktok-interaction-rpc
+    restart: unless-stopped
+    depends_on:
+      etcd:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      video-rpc:
+        condition: service_healthy
+    volumes:
+      - ./deploy/interaction.yaml:/app/etc/interaction.yaml:ro
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "8082"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  gateway:
+    build:
+      context: .
+      dockerfile: app/gateway/api/Dockerfile
+    image: tiktok-go/gateway:latest
+    container_name: tiktok-gateway
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    # 三个 rpc 都就绪（端口通）后再起，避免启动时 etcd 里还没注册记录
+    depends_on:
+      user-rpc:
+        condition: service_healthy
+      video-rpc:
+        condition: service_healthy
+      interaction-rpc:
+        condition: service_healthy
+    volumes:
+      - ./deploy/gateway.yaml:/app/etc/gateway.yaml:ro
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "8888"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
 volumes:
   # 卷由外部创建并持有（docker volume create，见 make infra-up）。
   # 指定固定卷名是为了复用已有的 mysql_data / redis_data，不被加项目名前缀；
