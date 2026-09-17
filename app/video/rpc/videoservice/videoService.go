@@ -14,22 +14,28 @@ import (
 )
 
 type (
-	DeleteVideoReq   = video.DeleteVideoReq
-	DeleteVideoResp  = video.DeleteVideoResp
-	FeedVideoReq     = video.FeedVideoReq
-	FeedVideoResp    = video.FeedVideoResp
-	ListVideoReq     = video.ListVideoReq
-	ListVideoResp    = video.ListVideoResp
-	PopularVideoReq  = video.PopularVideoReq
-	PopularVideoResp = video.PopularVideoResp
-	PublishVideoReq  = video.PublishVideoReq
-	PublishVideoResp = video.PublishVideoResp
-	SearchVideoReq   = video.SearchVideoReq
-	SearchVideoResp  = video.SearchVideoResp
-	Status           = video.Status
-	Video            = video.Video
-	VideoFeedData    = video.VideoFeedData
-	VideoPageData    = video.VideoPageData
+	BatchGetVideoReq     = video.BatchGetVideoReq
+	BatchGetVideoResp    = video.BatchGetVideoResp
+	DeleteVideoReq       = video.DeleteVideoReq
+	DeleteVideoResp      = video.DeleteVideoResp
+	FeedVideoReq         = video.FeedVideoReq
+	FeedVideoResp        = video.FeedVideoResp
+	IncrCommentCountReq  = video.IncrCommentCountReq
+	IncrCommentCountResp = video.IncrCommentCountResp
+	IncrLikeCountReq     = video.IncrLikeCountReq
+	IncrLikeCountResp    = video.IncrLikeCountResp
+	ListVideoReq         = video.ListVideoReq
+	ListVideoResp        = video.ListVideoResp
+	PopularVideoReq      = video.PopularVideoReq
+	PopularVideoResp     = video.PopularVideoResp
+	PublishVideoReq      = video.PublishVideoReq
+	PublishVideoResp     = video.PublishVideoResp
+	SearchVideoReq       = video.SearchVideoReq
+	SearchVideoResp      = video.SearchVideoResp
+	Status               = video.Status
+	Video                = video.Video
+	VideoFeedData        = video.VideoFeedData
+	VideoPageData        = video.VideoPageData
 
 	VideoService interface {
 		// 视频投稿 POST /video/publish
@@ -44,6 +50,12 @@ type (
 		PopularVideo(ctx context.Context, in *PopularVideoReq, opts ...grpc.CallOption) (*PopularVideoResp, error)
 		// 搜索视频 POST /video/search
 		SearchVideo(ctx context.Context, in *SearchVideoReq, opts ...grpc.CallOption) (*SearchVideoResp, error)
+		// 按 id 批量查视频，供互动服务组装点赞列表
+		BatchGetVideo(ctx context.Context, in *BatchGetVideoReq, opts ...grpc.CallOption) (*BatchGetVideoResp, error)
+		// 增减视频点赞数，供互动服务把点赞结果同步回数据库
+		IncrLikeCount(ctx context.Context, in *IncrLikeCountReq, opts ...grpc.CallOption) (*IncrLikeCountResp, error)
+		// 增减视频评论数，供互动服务在发表/删除评论时维护
+		IncrCommentCount(ctx context.Context, in *IncrCommentCountReq, opts ...grpc.CallOption) (*IncrCommentCountResp, error)
 	}
 
 	defaultVideoService struct {
@@ -91,4 +103,22 @@ func (m *defaultVideoService) PopularVideo(ctx context.Context, in *PopularVideo
 func (m *defaultVideoService) SearchVideo(ctx context.Context, in *SearchVideoReq, opts ...grpc.CallOption) (*SearchVideoResp, error) {
 	client := video.NewVideoServiceClient(m.cli.Conn())
 	return client.SearchVideo(ctx, in, opts...)
+}
+
+// 按 id 批量查视频，供互动服务组装点赞列表
+func (m *defaultVideoService) BatchGetVideo(ctx context.Context, in *BatchGetVideoReq, opts ...grpc.CallOption) (*BatchGetVideoResp, error) {
+	client := video.NewVideoServiceClient(m.cli.Conn())
+	return client.BatchGetVideo(ctx, in, opts...)
+}
+
+// 增减视频点赞数，供互动服务把点赞结果同步回数据库
+func (m *defaultVideoService) IncrLikeCount(ctx context.Context, in *IncrLikeCountReq, opts ...grpc.CallOption) (*IncrLikeCountResp, error) {
+	client := video.NewVideoServiceClient(m.cli.Conn())
+	return client.IncrLikeCount(ctx, in, opts...)
+}
+
+// 增减视频评论数，供互动服务在发表/删除评论时维护
+func (m *defaultVideoService) IncrCommentCount(ctx context.Context, in *IncrCommentCountReq, opts ...grpc.CallOption) (*IncrCommentCountResp, error) {
+	client := video.NewVideoServiceClient(m.cli.Conn())
+	return client.IncrCommentCount(ctx, in, opts...)
 }

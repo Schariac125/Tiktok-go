@@ -33,6 +33,12 @@ type (
 		Search(ctx context.Context, q SearchQuery) ([]*Video, error)
 		// CountSearch 统计符合搜索条件的视频总数，用于分页。
 		CountSearch(ctx context.Context, q SearchQuery) (int64, error)
+		// FindByIds 按 id 批量查询未删除的视频，供互动服务组装点赞列表。
+		FindByIds(ctx context.Context, ids []uint64) ([]*Video, error)
+		// IncrLikeCount 增减点赞数，不会减到 0 以下。
+		IncrLikeCount(ctx context.Context, id uint64, delta int64) error
+		// IncrCommentCount 增减评论数，不会减到 0 以下。
+		IncrCommentCount(ctx context.Context, id uint64, delta int64) error
 	}
 
 	customVideoModel struct {
@@ -180,6 +186,43 @@ func (m *customVideoModel) Search(ctx context.Context, q SearchQuery) ([]*Video,
 		return nil, err
 	}
 	return list, nil
+}
+
+// FindByIds 按 id 批量查询未删除的视频。
+// 返回顺序不保证与入参一致，调用方需要自己按 id 对齐（点赞列表要保持点赞时间序）。
+func (m *customVideoModel) FindByIds(ctx context.Context, ids []uint64) ([]*Video, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+
+	args := make([]any, 0, len(ids))
+	for _, id := range ids {
+		args = append(args, id)
+	}
+
+	query := fmt.Sprintf("select %s from %s where `id` in (%s) and `delete_at` is null",
+		videoRows, m.table, strings.TrimSuffix(strings.Repeat("?,", len(ids)), ","))
+
+	var list []*Video
+	if err := m.QueryRowsNoCacheCtx(ctx, &list, query, args...); err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+// IncrLikeCount 增减点赞数。列是 UNSIGNED，直接做减法可能越界报错，
+// 所以先转成有符号相加再取 0 兜底。
+func (m *customVideoModel) IncrLikeCount(ctx context.Context, id uint64, delta int64) error {
+	query := fmt.Sprintf("update %s set `like_count` = greatest(cast(`like_count` as signed) + ?, 0) where `id` = ?", m.table)
+	_, err := m.ExecNoCacheCtx(ctx, query, delta, id)
+	return err
+}
+
+// IncrCommentCount 增减评论数，同样做 0 兜底。
+func (m *customVideoModel) IncrCommentCount(ctx context.Context, id uint64, delta int64) error {
+	query := fmt.Sprintf("update %s set `comment_count` = greatest(cast(`comment_count` as signed) + ?, 0) where `id` = ?", m.table)
+	_, err := m.ExecNoCacheCtx(ctx, query, delta, id)
+	return err
 }
 
 // CountSearch 统计符合搜索条件的视频总数。

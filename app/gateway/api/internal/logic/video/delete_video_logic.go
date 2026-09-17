@@ -8,6 +8,7 @@ import (
 
 	"tiktok-go/app/gateway/api/internal/svc"
 	"tiktok-go/app/gateway/api/internal/types"
+	"tiktok-go/app/interaction/rpc/interaction"
 	"tiktok-go/app/video/rpc/video"
 	"tiktok-go/pkg/errno"
 	"tiktok-go/pkg/jwt"
@@ -47,5 +48,15 @@ func (l *DeleteVideoLogic) DeleteVideo(req *types.DeleteVideoReq) (*types.Delete
 	if rpcResp == nil || rpcResp.Base == nil {
 		return &types.DeleteVideoResp{Base: toStatus(errno.ErrInternal)}, nil
 	}
+
+	// 视频删成功后，连带清理它的评论与点赞（数据在 interaction 服务里）。
+	// 顺序是先删主体再清附属：反过来一旦删视频失败，用户会看到视频还在、评论却没了。
+	// 清理失败不回滚也不报错——视频已经删掉了，残留的互动数据不影响主流程，记日志即可。
+	if rpcResp.Base.Code == errno.OK.Code {
+		if _, err := l.svcCtx.InteractionRpc.CleanByVideo(l.ctx, &interaction.CleanByVideoReq{VideoId: req.Id}); err != nil {
+			l.Errorf("清理视频 %d 的互动数据失败: %v", req.Id, err)
+		}
+	}
+
 	return &types.DeleteVideoResp{Base: types.Status{Code: rpcResp.Base.Code, Msg: rpcResp.Base.Msg}}, nil
 }

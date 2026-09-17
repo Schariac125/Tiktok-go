@@ -12,6 +12,31 @@ type BindMFAResp struct {
 	Base Status `json:"base"` // 响应状态
 }
 
+type Comment struct {
+	Id         int64  `json:"id"`          // ID 编号
+	UserId     int64  `json:"user_id"`     // 发布者用户 id
+	VideoId    int64  `json:"video_id"`    // 视频 id
+	ParentId   int64  `json:"parent_id"`   // 父评论 id，可留空
+	LikeCount  int64  `json:"like_count"`  // 点赞数
+	ChildCount int64  `json:"child_count"` // 子评论数
+	Content    string `json:"content"`     // 评论文本本身
+	CreatedAt  string `json:"created_at"`  // 创建时间
+	UpdatedAt  string `json:"updated_at"`  // 更新时间
+	DeletedAt  string `json:"deleted_at"`  // 删除时间
+}
+
+type CommentListData struct {
+	Items []Comment `json:"items"` // 评论列表
+}
+
+type DeleteCommentReq struct {
+	CommentId int64 `json:"comment_id"` // 评论 id
+}
+
+type DeleteCommentResp struct {
+	Base Status `json:"base"` // 响应状态
+}
+
 type DeleteVideoReq struct {
 	Id int64 `json:"id"` // ID 编号
 }
@@ -41,6 +66,38 @@ type GetUserInfoReq struct {
 type GetUserInfoResp struct {
 	Base Status `json:"base"` // 响应状态
 	Data User   `json:"data"` // 用户信息
+}
+
+type LikeReq struct {
+	VideoId   int64 `json:"video_id,optional"`   // 视频 id，与 comment_id 至少有一个
+	CommentId int64 `json:"comment_id,optional"` // 评论 id
+}
+
+type LikeResp struct {
+	Base Status `json:"base"` // 响应状态
+}
+
+type ListCommentReq struct {
+	VideoId   int64 `form:"video_id,optional"`   // 视频 id，与 comment_id 至少有一个
+	CommentId int64 `form:"comment_id,optional"` // 父评论 id，查某条评论下的回复
+	PageSize  int64 `form:"page_size,optional"`  // 每页数量
+	PageNum   int64 `form:"page_num,optional"`   // 页码
+}
+
+type ListCommentResp struct {
+	Base Status          `json:"base"` // 响应状态
+	Data CommentListData `json:"data"` // 评论列表
+}
+
+type ListLikeReq struct {
+	UserId   int64 `form:"user_id"`            // 要查看的用户 id
+	PageNum  int64 `form:"page_num,optional"`  // 页码
+	PageSize int64 `form:"page_size,optional"` // 每页数量
+}
+
+type ListLikeResp struct {
+	Base Status        `json:"base"` // 响应状态
+	Data VideoPageData `json:"data"` // 该用户点赞过的视频
 }
 
 type ListVideoReq struct {
@@ -82,6 +139,16 @@ type PopularVideoResp struct {
 	Data VideoFeedData `json:"data"` // 视频列表
 }
 
+type PublishCommentReq struct {
+	VideoId   int64  `json:"video_id,optional"`   // 视频 id，与 comment_id 至少有一个
+	CommentId int64  `json:"comment_id,optional"` // 父评论 id，填了就是对这条评论的回复
+	Content   string `json:"content"`             // 评论内容
+}
+
+type PublishCommentResp struct {
+	Base Status `json:"base"` // 响应状态
+}
+
 type PublishVideoResp struct {
 	Base Status `json:"base"` // 响应状态
 }
@@ -112,6 +179,15 @@ type SearchVideoResp struct {
 type Status struct {
 	Code int32  `json:"code"` // 状态码
 	Msg  string `json:"msg"`  // 提示信息
+}
+
+type UnlikeReq struct {
+	VideoId   int64 `json:"video_id,optional"`   // 视频 id，与 comment_id 至少有一个
+	CommentId int64 `json:"comment_id,optional"` // 评论 id
+}
+
+type UnlikeResp struct {
+	Base Status `json:"base"` // 响应状态
 }
 
 type UploadAvatarResp struct {

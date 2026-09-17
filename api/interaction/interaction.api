@@ -10,7 +10,9 @@ import "../model.api"
 type (
 	// 点赞列表请求，参数走 query
 	ListLikeReq {
-		UserId int64 `form:"user_id"` // 要查看的用户 id
+		UserId   int64 `form:"user_id"`            // 要查看的用户 id
+		PageNum  int64 `form:"page_num,optional"`  // 页码
+		PageSize int64 `form:"page_size,optional"` // 每页数量
 	}
 
 	// 点赞列表响应

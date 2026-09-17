@@ -19,12 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	VideoService_PublishVideo_FullMethodName = "/video.VideoService/PublishVideo"
-	VideoService_DeleteVideo_FullMethodName  = "/video.VideoService/DeleteVideo"
-	VideoService_ListVideo_FullMethodName    = "/video.VideoService/ListVideo"
-	VideoService_FeedVideo_FullMethodName    = "/video.VideoService/FeedVideo"
-	VideoService_PopularVideo_FullMethodName = "/video.VideoService/PopularVideo"
-	VideoService_SearchVideo_FullMethodName  = "/video.VideoService/SearchVideo"
+	VideoService_PublishVideo_FullMethodName     = "/video.VideoService/PublishVideo"
+	VideoService_DeleteVideo_FullMethodName      = "/video.VideoService/DeleteVideo"
+	VideoService_ListVideo_FullMethodName        = "/video.VideoService/ListVideo"
+	VideoService_FeedVideo_FullMethodName        = "/video.VideoService/FeedVideo"
+	VideoService_PopularVideo_FullMethodName     = "/video.VideoService/PopularVideo"
+	VideoService_SearchVideo_FullMethodName      = "/video.VideoService/SearchVideo"
+	VideoService_BatchGetVideo_FullMethodName    = "/video.VideoService/BatchGetVideo"
+	VideoService_IncrLikeCount_FullMethodName    = "/video.VideoService/IncrLikeCount"
+	VideoService_IncrCommentCount_FullMethodName = "/video.VideoService/IncrCommentCount"
 )
 
 // VideoServiceClient is the client API for VideoService service.
@@ -43,6 +46,12 @@ type VideoServiceClient interface {
 	PopularVideo(ctx context.Context, in *PopularVideoReq, opts ...grpc.CallOption) (*PopularVideoResp, error)
 	// 搜索视频 POST /video/search
 	SearchVideo(ctx context.Context, in *SearchVideoReq, opts ...grpc.CallOption) (*SearchVideoResp, error)
+	// 按 id 批量查视频，供互动服务组装点赞列表
+	BatchGetVideo(ctx context.Context, in *BatchGetVideoReq, opts ...grpc.CallOption) (*BatchGetVideoResp, error)
+	// 增减视频点赞数，供互动服务把点赞结果同步回数据库
+	IncrLikeCount(ctx context.Context, in *IncrLikeCountReq, opts ...grpc.CallOption) (*IncrLikeCountResp, error)
+	// 增减视频评论数，供互动服务在发表/删除评论时维护
+	IncrCommentCount(ctx context.Context, in *IncrCommentCountReq, opts ...grpc.CallOption) (*IncrCommentCountResp, error)
 }
 
 type videoServiceClient struct {
@@ -113,6 +122,36 @@ func (c *videoServiceClient) SearchVideo(ctx context.Context, in *SearchVideoReq
 	return out, nil
 }
 
+func (c *videoServiceClient) BatchGetVideo(ctx context.Context, in *BatchGetVideoReq, opts ...grpc.CallOption) (*BatchGetVideoResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BatchGetVideoResp)
+	err := c.cc.Invoke(ctx, VideoService_BatchGetVideo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *videoServiceClient) IncrLikeCount(ctx context.Context, in *IncrLikeCountReq, opts ...grpc.CallOption) (*IncrLikeCountResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(IncrLikeCountResp)
+	err := c.cc.Invoke(ctx, VideoService_IncrLikeCount_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *videoServiceClient) IncrCommentCount(ctx context.Context, in *IncrCommentCountReq, opts ...grpc.CallOption) (*IncrCommentCountResp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(IncrCommentCountResp)
+	err := c.cc.Invoke(ctx, VideoService_IncrCommentCount_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // VideoServiceServer is the server API for VideoService service.
 // All implementations must embed UnimplementedVideoServiceServer
 // for forward compatibility.
@@ -129,6 +168,12 @@ type VideoServiceServer interface {
 	PopularVideo(context.Context, *PopularVideoReq) (*PopularVideoResp, error)
 	// 搜索视频 POST /video/search
 	SearchVideo(context.Context, *SearchVideoReq) (*SearchVideoResp, error)
+	// 按 id 批量查视频，供互动服务组装点赞列表
+	BatchGetVideo(context.Context, *BatchGetVideoReq) (*BatchGetVideoResp, error)
+	// 增减视频点赞数，供互动服务把点赞结果同步回数据库
+	IncrLikeCount(context.Context, *IncrLikeCountReq) (*IncrLikeCountResp, error)
+	// 增减视频评论数，供互动服务在发表/删除评论时维护
+	IncrCommentCount(context.Context, *IncrCommentCountReq) (*IncrCommentCountResp, error)
 	mustEmbedUnimplementedVideoServiceServer()
 }
 
@@ -156,6 +201,15 @@ func (UnimplementedVideoServiceServer) PopularVideo(context.Context, *PopularVid
 }
 func (UnimplementedVideoServiceServer) SearchVideo(context.Context, *SearchVideoReq) (*SearchVideoResp, error) {
 	return nil, status.Error(codes.Unimplemented, "method SearchVideo not implemented")
+}
+func (UnimplementedVideoServiceServer) BatchGetVideo(context.Context, *BatchGetVideoReq) (*BatchGetVideoResp, error) {
+	return nil, status.Error(codes.Unimplemented, "method BatchGetVideo not implemented")
+}
+func (UnimplementedVideoServiceServer) IncrLikeCount(context.Context, *IncrLikeCountReq) (*IncrLikeCountResp, error) {
+	return nil, status.Error(codes.Unimplemented, "method IncrLikeCount not implemented")
+}
+func (UnimplementedVideoServiceServer) IncrCommentCount(context.Context, *IncrCommentCountReq) (*IncrCommentCountResp, error) {
+	return nil, status.Error(codes.Unimplemented, "method IncrCommentCount not implemented")
 }
 func (UnimplementedVideoServiceServer) mustEmbedUnimplementedVideoServiceServer() {}
 func (UnimplementedVideoServiceServer) testEmbeddedByValue()                      {}
@@ -286,6 +340,60 @@ func _VideoService_SearchVideo_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _VideoService_BatchGetVideo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchGetVideoReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VideoServiceServer).BatchGetVideo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VideoService_BatchGetVideo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VideoServiceServer).BatchGetVideo(ctx, req.(*BatchGetVideoReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VideoService_IncrLikeCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IncrLikeCountReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VideoServiceServer).IncrLikeCount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VideoService_IncrLikeCount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VideoServiceServer).IncrLikeCount(ctx, req.(*IncrLikeCountReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VideoService_IncrCommentCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IncrCommentCountReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VideoServiceServer).IncrCommentCount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VideoService_IncrCommentCount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VideoServiceServer).IncrCommentCount(ctx, req.(*IncrCommentCountReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // VideoService_ServiceDesc is the grpc.ServiceDesc for VideoService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -316,6 +424,18 @@ var VideoService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SearchVideo",
 			Handler:    _VideoService_SearchVideo_Handler,
+		},
+		{
+			MethodName: "BatchGetVideo",
+			Handler:    _VideoService_BatchGetVideo_Handler,
+		},
+		{
+			MethodName: "IncrLikeCount",
+			Handler:    _VideoService_IncrLikeCount_Handler,
+		},
+		{
+			MethodName: "IncrCommentCount",
+			Handler:    _VideoService_IncrCommentCount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

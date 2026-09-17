@@ -116,6 +116,35 @@ message SearchVideoResp {
   VideoPageData data = 2;
 }
 
+// ------- 供其他服务调用 -------
+
+message BatchGetVideoReq {
+  repeated int64 ids = 1; // 视频 id 列表
+}
+
+message BatchGetVideoResp {
+  Status base = 1;
+  repeated Video items = 2; // 只返回存在且未删除的
+}
+
+message IncrLikeCountReq {
+  int64 video_id = 1; // 视频 id
+  int64 delta = 2;    // 增量，可正可负
+}
+
+message IncrLikeCountResp {
+  Status base = 1;
+}
+
+message IncrCommentCountReq {
+  int64 video_id = 1; // 视频 id
+  int64 delta = 2;    // 增量，可正可负
+}
+
+message IncrCommentCountResp {
+  Status base = 1;
+}
+
 service VideoService {
   // 视频投稿 POST /video/publish
   rpc PublishVideo(PublishVideoReq) returns (PublishVideoResp);
@@ -129,4 +158,10 @@ service VideoService {
   rpc PopularVideo(PopularVideoReq) returns (PopularVideoResp);
   // 搜索视频 POST /video/search
   rpc SearchVideo(SearchVideoReq) returns (SearchVideoResp);
+  // 按 id 批量查视频，供互动服务组装点赞列表
+  rpc BatchGetVideo(BatchGetVideoReq) returns (BatchGetVideoResp);
+  // 增减视频点赞数，供互动服务把点赞结果同步回数据库
+  rpc IncrLikeCount(IncrLikeCountReq) returns (IncrLikeCountResp);
+  // 增减视频评论数，供互动服务在发表/删除评论时维护
+  rpc IncrCommentCount(IncrCommentCountReq) returns (IncrCommentCountResp);
 }

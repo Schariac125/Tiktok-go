@@ -19,7 +19,7 @@ SHELL := /bin/bash
 MODULE := tiktok-go
 
 # 业务模块列表，决定 rpc-build / model-build / build 要处理哪些模块
-MODULES := user video
+MODULES := user video interaction
 
 # goctl 命名风格
 #   api 网关用 go_zero：bind_m_f_a_handler.go

@@ -71,7 +71,9 @@ message UnlikeResp {
 }
 
 message ListLikeReq {
-  int64 user_id = 1; // 要查看的用户 id
+  int64 user_id = 1;   // 要查看的用户 id
+  int64 page_num = 2;  // 页码
+  int64 page_size = 3; // 每页数量
 }
 
 message ListLikeResp {
@@ -113,6 +115,18 @@ message ListCommentResp {
   repeated Comment items = 2; // 评论列表
 }
 
+// ------- 供其他服务调用 -------
+
+message CleanByVideoReq {
+  int64 video_id = 1; // 被删除的视频 id
+}
+
+message CleanByVideoResp {
+  Status base = 1;
+  int64 comments = 2; // 清理掉的评论数
+  int64 likes = 3;    // 清理掉的点赞数
+}
+
 service InteractionService {
   // 点赞 POST /like/action
   rpc Like(LikeReq) returns (LikeResp);
@@ -126,4 +140,6 @@ service InteractionService {
   rpc DeleteComment(DeleteCommentReq) returns (DeleteCommentResp);
   // 查看评论列表 GET /comment/list
   rpc ListComment(ListCommentReq) returns (ListCommentResp);
+  // 视频被删除后清理它的评论与点赞（内部接口，不对外暴露 HTTP）
+  rpc CleanByVideo(CleanByVideoReq) returns (CleanByVideoResp);
 }

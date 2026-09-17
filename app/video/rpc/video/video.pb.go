@@ -969,6 +969,294 @@ func (x *SearchVideoResp) GetData() *VideoPageData {
 	return nil
 }
 
+type BatchGetVideoReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Ids           []int64                `protobuf:"varint,1,rep,packed,name=ids,proto3" json:"ids,omitempty"` // 视频 id 列表
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BatchGetVideoReq) Reset() {
+	*x = BatchGetVideoReq{}
+	mi := &file_api_video_video_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BatchGetVideoReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BatchGetVideoReq) ProtoMessage() {}
+
+func (x *BatchGetVideoReq) ProtoReflect() protoreflect.Message {
+	mi := &file_api_video_video_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BatchGetVideoReq.ProtoReflect.Descriptor instead.
+func (*BatchGetVideoReq) Descriptor() ([]byte, []int) {
+	return file_api_video_video_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *BatchGetVideoReq) GetIds() []int64 {
+	if x != nil {
+		return x.Ids
+	}
+	return nil
+}
+
+type BatchGetVideoResp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Base          *Status                `protobuf:"bytes,1,opt,name=base,proto3" json:"base,omitempty"`
+	Items         []*Video               `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"` // 只返回存在且未删除的
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BatchGetVideoResp) Reset() {
+	*x = BatchGetVideoResp{}
+	mi := &file_api_video_video_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BatchGetVideoResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BatchGetVideoResp) ProtoMessage() {}
+
+func (x *BatchGetVideoResp) ProtoReflect() protoreflect.Message {
+	mi := &file_api_video_video_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BatchGetVideoResp.ProtoReflect.Descriptor instead.
+func (*BatchGetVideoResp) Descriptor() ([]byte, []int) {
+	return file_api_video_video_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *BatchGetVideoResp) GetBase() *Status {
+	if x != nil {
+		return x.Base
+	}
+	return nil
+}
+
+func (x *BatchGetVideoResp) GetItems() []*Video {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+type IncrLikeCountReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	VideoId       int64                  `protobuf:"varint,1,opt,name=video_id,json=videoId,proto3" json:"video_id,omitempty"` // 视频 id
+	Delta         int64                  `protobuf:"varint,2,opt,name=delta,proto3" json:"delta,omitempty"`                    // 增量，可正可负
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IncrLikeCountReq) Reset() {
+	*x = IncrLikeCountReq{}
+	mi := &file_api_video_video_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IncrLikeCountReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IncrLikeCountReq) ProtoMessage() {}
+
+func (x *IncrLikeCountReq) ProtoReflect() protoreflect.Message {
+	mi := &file_api_video_video_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IncrLikeCountReq.ProtoReflect.Descriptor instead.
+func (*IncrLikeCountReq) Descriptor() ([]byte, []int) {
+	return file_api_video_video_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *IncrLikeCountReq) GetVideoId() int64 {
+	if x != nil {
+		return x.VideoId
+	}
+	return 0
+}
+
+func (x *IncrLikeCountReq) GetDelta() int64 {
+	if x != nil {
+		return x.Delta
+	}
+	return 0
+}
+
+type IncrLikeCountResp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Base          *Status                `protobuf:"bytes,1,opt,name=base,proto3" json:"base,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IncrLikeCountResp) Reset() {
+	*x = IncrLikeCountResp{}
+	mi := &file_api_video_video_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IncrLikeCountResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IncrLikeCountResp) ProtoMessage() {}
+
+func (x *IncrLikeCountResp) ProtoReflect() protoreflect.Message {
+	mi := &file_api_video_video_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IncrLikeCountResp.ProtoReflect.Descriptor instead.
+func (*IncrLikeCountResp) Descriptor() ([]byte, []int) {
+	return file_api_video_video_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *IncrLikeCountResp) GetBase() *Status {
+	if x != nil {
+		return x.Base
+	}
+	return nil
+}
+
+type IncrCommentCountReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	VideoId       int64                  `protobuf:"varint,1,opt,name=video_id,json=videoId,proto3" json:"video_id,omitempty"` // 视频 id
+	Delta         int64                  `protobuf:"varint,2,opt,name=delta,proto3" json:"delta,omitempty"`                    // 增量，可正可负
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IncrCommentCountReq) Reset() {
+	*x = IncrCommentCountReq{}
+	mi := &file_api_video_video_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IncrCommentCountReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IncrCommentCountReq) ProtoMessage() {}
+
+func (x *IncrCommentCountReq) ProtoReflect() protoreflect.Message {
+	mi := &file_api_video_video_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IncrCommentCountReq.ProtoReflect.Descriptor instead.
+func (*IncrCommentCountReq) Descriptor() ([]byte, []int) {
+	return file_api_video_video_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *IncrCommentCountReq) GetVideoId() int64 {
+	if x != nil {
+		return x.VideoId
+	}
+	return 0
+}
+
+func (x *IncrCommentCountReq) GetDelta() int64 {
+	if x != nil {
+		return x.Delta
+	}
+	return 0
+}
+
+type IncrCommentCountResp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Base          *Status                `protobuf:"bytes,1,opt,name=base,proto3" json:"base,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *IncrCommentCountResp) Reset() {
+	*x = IncrCommentCountResp{}
+	mi := &file_api_video_video_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *IncrCommentCountResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*IncrCommentCountResp) ProtoMessage() {}
+
+func (x *IncrCommentCountResp) ProtoReflect() protoreflect.Message {
+	mi := &file_api_video_video_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use IncrCommentCountResp.ProtoReflect.Descriptor instead.
+func (*IncrCommentCountResp) Descriptor() ([]byte, []int) {
+	return file_api_video_video_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *IncrCommentCountResp) GetBase() *Status {
+	if x != nil {
+		return x.Base
+	}
+	return nil
+}
+
 var File_api_video_video_proto protoreflect.FileDescriptor
 
 const file_api_video_video_proto_rawDesc = "" +
@@ -1040,14 +1328,32 @@ const file_api_video_video_proto_rawDesc = "" +
 	"\auser_id\x18\x06 \x01(\x03R\x06userId\"^\n" +
 	"\x0fSearchVideoResp\x12!\n" +
 	"\x04base\x18\x01 \x01(\v2\r.video.StatusR\x04base\x12(\n" +
-	"\x04data\x18\x02 \x01(\v2\x14.video.VideoPageDataR\x04data2\xfc\x02\n" +
+	"\x04data\x18\x02 \x01(\v2\x14.video.VideoPageDataR\x04data\"$\n" +
+	"\x10BatchGetVideoReq\x12\x10\n" +
+	"\x03ids\x18\x01 \x03(\x03R\x03ids\"Z\n" +
+	"\x11BatchGetVideoResp\x12!\n" +
+	"\x04base\x18\x01 \x01(\v2\r.video.StatusR\x04base\x12\"\n" +
+	"\x05items\x18\x02 \x03(\v2\f.video.VideoR\x05items\"C\n" +
+	"\x10IncrLikeCountReq\x12\x19\n" +
+	"\bvideo_id\x18\x01 \x01(\x03R\avideoId\x12\x14\n" +
+	"\x05delta\x18\x02 \x01(\x03R\x05delta\"6\n" +
+	"\x11IncrLikeCountResp\x12!\n" +
+	"\x04base\x18\x01 \x01(\v2\r.video.StatusR\x04base\"F\n" +
+	"\x13IncrCommentCountReq\x12\x19\n" +
+	"\bvideo_id\x18\x01 \x01(\x03R\avideoId\x12\x14\n" +
+	"\x05delta\x18\x02 \x01(\x03R\x05delta\"9\n" +
+	"\x14IncrCommentCountResp\x12!\n" +
+	"\x04base\x18\x01 \x01(\v2\r.video.StatusR\x04base2\xd1\x04\n" +
 	"\fVideoService\x12?\n" +
 	"\fPublishVideo\x12\x16.video.PublishVideoReq\x1a\x17.video.PublishVideoResp\x12<\n" +
 	"\vDeleteVideo\x12\x15.video.DeleteVideoReq\x1a\x16.video.DeleteVideoResp\x126\n" +
 	"\tListVideo\x12\x13.video.ListVideoReq\x1a\x14.video.ListVideoResp\x126\n" +
 	"\tFeedVideo\x12\x13.video.FeedVideoReq\x1a\x14.video.FeedVideoResp\x12?\n" +
 	"\fPopularVideo\x12\x16.video.PopularVideoReq\x1a\x17.video.PopularVideoResp\x12<\n" +
-	"\vSearchVideo\x12\x15.video.SearchVideoReq\x1a\x16.video.SearchVideoRespB\tZ\a./videob\x06proto3"
+	"\vSearchVideo\x12\x15.video.SearchVideoReq\x1a\x16.video.SearchVideoResp\x12B\n" +
+	"\rBatchGetVideo\x12\x17.video.BatchGetVideoReq\x1a\x18.video.BatchGetVideoResp\x12B\n" +
+	"\rIncrLikeCount\x12\x17.video.IncrLikeCountReq\x1a\x18.video.IncrLikeCountResp\x12K\n" +
+	"\x10IncrCommentCount\x12\x1a.video.IncrCommentCountReq\x1a\x1b.video.IncrCommentCountRespB\tZ\a./videob\x06proto3"
 
 var (
 	file_api_video_video_proto_rawDescOnce sync.Once
@@ -1061,24 +1367,30 @@ func file_api_video_video_proto_rawDescGZIP() []byte {
 	return file_api_video_video_proto_rawDescData
 }
 
-var file_api_video_video_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_api_video_video_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_api_video_video_proto_goTypes = []any{
-	(*Status)(nil),           // 0: video.Status
-	(*Video)(nil),            // 1: video.Video
-	(*VideoPageData)(nil),    // 2: video.VideoPageData
-	(*VideoFeedData)(nil),    // 3: video.VideoFeedData
-	(*PublishVideoReq)(nil),  // 4: video.PublishVideoReq
-	(*PublishVideoResp)(nil), // 5: video.PublishVideoResp
-	(*DeleteVideoReq)(nil),   // 6: video.DeleteVideoReq
-	(*DeleteVideoResp)(nil),  // 7: video.DeleteVideoResp
-	(*ListVideoReq)(nil),     // 8: video.ListVideoReq
-	(*ListVideoResp)(nil),    // 9: video.ListVideoResp
-	(*FeedVideoReq)(nil),     // 10: video.FeedVideoReq
-	(*FeedVideoResp)(nil),    // 11: video.FeedVideoResp
-	(*PopularVideoReq)(nil),  // 12: video.PopularVideoReq
-	(*PopularVideoResp)(nil), // 13: video.PopularVideoResp
-	(*SearchVideoReq)(nil),   // 14: video.SearchVideoReq
-	(*SearchVideoResp)(nil),  // 15: video.SearchVideoResp
+	(*Status)(nil),               // 0: video.Status
+	(*Video)(nil),                // 1: video.Video
+	(*VideoPageData)(nil),        // 2: video.VideoPageData
+	(*VideoFeedData)(nil),        // 3: video.VideoFeedData
+	(*PublishVideoReq)(nil),      // 4: video.PublishVideoReq
+	(*PublishVideoResp)(nil),     // 5: video.PublishVideoResp
+	(*DeleteVideoReq)(nil),       // 6: video.DeleteVideoReq
+	(*DeleteVideoResp)(nil),      // 7: video.DeleteVideoResp
+	(*ListVideoReq)(nil),         // 8: video.ListVideoReq
+	(*ListVideoResp)(nil),        // 9: video.ListVideoResp
+	(*FeedVideoReq)(nil),         // 10: video.FeedVideoReq
+	(*FeedVideoResp)(nil),        // 11: video.FeedVideoResp
+	(*PopularVideoReq)(nil),      // 12: video.PopularVideoReq
+	(*PopularVideoResp)(nil),     // 13: video.PopularVideoResp
+	(*SearchVideoReq)(nil),       // 14: video.SearchVideoReq
+	(*SearchVideoResp)(nil),      // 15: video.SearchVideoResp
+	(*BatchGetVideoReq)(nil),     // 16: video.BatchGetVideoReq
+	(*BatchGetVideoResp)(nil),    // 17: video.BatchGetVideoResp
+	(*IncrLikeCountReq)(nil),     // 18: video.IncrLikeCountReq
+	(*IncrLikeCountResp)(nil),    // 19: video.IncrLikeCountResp
+	(*IncrCommentCountReq)(nil),  // 20: video.IncrCommentCountReq
+	(*IncrCommentCountResp)(nil), // 21: video.IncrCommentCountResp
 }
 var file_api_video_video_proto_depIdxs = []int32{
 	1,  // 0: video.VideoPageData.items:type_name -> video.Video
@@ -1093,23 +1405,33 @@ var file_api_video_video_proto_depIdxs = []int32{
 	3,  // 9: video.PopularVideoResp.data:type_name -> video.VideoFeedData
 	0,  // 10: video.SearchVideoResp.base:type_name -> video.Status
 	2,  // 11: video.SearchVideoResp.data:type_name -> video.VideoPageData
-	4,  // 12: video.VideoService.PublishVideo:input_type -> video.PublishVideoReq
-	6,  // 13: video.VideoService.DeleteVideo:input_type -> video.DeleteVideoReq
-	8,  // 14: video.VideoService.ListVideo:input_type -> video.ListVideoReq
-	10, // 15: video.VideoService.FeedVideo:input_type -> video.FeedVideoReq
-	12, // 16: video.VideoService.PopularVideo:input_type -> video.PopularVideoReq
-	14, // 17: video.VideoService.SearchVideo:input_type -> video.SearchVideoReq
-	5,  // 18: video.VideoService.PublishVideo:output_type -> video.PublishVideoResp
-	7,  // 19: video.VideoService.DeleteVideo:output_type -> video.DeleteVideoResp
-	9,  // 20: video.VideoService.ListVideo:output_type -> video.ListVideoResp
-	11, // 21: video.VideoService.FeedVideo:output_type -> video.FeedVideoResp
-	13, // 22: video.VideoService.PopularVideo:output_type -> video.PopularVideoResp
-	15, // 23: video.VideoService.SearchVideo:output_type -> video.SearchVideoResp
-	18, // [18:24] is the sub-list for method output_type
-	12, // [12:18] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	0,  // 12: video.BatchGetVideoResp.base:type_name -> video.Status
+	1,  // 13: video.BatchGetVideoResp.items:type_name -> video.Video
+	0,  // 14: video.IncrLikeCountResp.base:type_name -> video.Status
+	0,  // 15: video.IncrCommentCountResp.base:type_name -> video.Status
+	4,  // 16: video.VideoService.PublishVideo:input_type -> video.PublishVideoReq
+	6,  // 17: video.VideoService.DeleteVideo:input_type -> video.DeleteVideoReq
+	8,  // 18: video.VideoService.ListVideo:input_type -> video.ListVideoReq
+	10, // 19: video.VideoService.FeedVideo:input_type -> video.FeedVideoReq
+	12, // 20: video.VideoService.PopularVideo:input_type -> video.PopularVideoReq
+	14, // 21: video.VideoService.SearchVideo:input_type -> video.SearchVideoReq
+	16, // 22: video.VideoService.BatchGetVideo:input_type -> video.BatchGetVideoReq
+	18, // 23: video.VideoService.IncrLikeCount:input_type -> video.IncrLikeCountReq
+	20, // 24: video.VideoService.IncrCommentCount:input_type -> video.IncrCommentCountReq
+	5,  // 25: video.VideoService.PublishVideo:output_type -> video.PublishVideoResp
+	7,  // 26: video.VideoService.DeleteVideo:output_type -> video.DeleteVideoResp
+	9,  // 27: video.VideoService.ListVideo:output_type -> video.ListVideoResp
+	11, // 28: video.VideoService.FeedVideo:output_type -> video.FeedVideoResp
+	13, // 29: video.VideoService.PopularVideo:output_type -> video.PopularVideoResp
+	15, // 30: video.VideoService.SearchVideo:output_type -> video.SearchVideoResp
+	17, // 31: video.VideoService.BatchGetVideo:output_type -> video.BatchGetVideoResp
+	19, // 32: video.VideoService.IncrLikeCount:output_type -> video.IncrLikeCountResp
+	21, // 33: video.VideoService.IncrCommentCount:output_type -> video.IncrCommentCountResp
+	25, // [25:34] is the sub-list for method output_type
+	16, // [16:25] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_api_video_video_proto_init() }
@@ -1123,7 +1445,7 @@ func file_api_video_video_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_video_video_proto_rawDesc), len(file_api_video_video_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   16,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

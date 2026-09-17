@@ -37,6 +37,9 @@ var (
 	ErrVideoNotFound = &Errno{Code: 404, Msg: "视频不存在"}
 	// ErrVideoForbidden 操作的不是自己投稿的视频
 	ErrVideoForbidden = &Errno{Code: 403, Msg: "无权操作该视频"}
+	ErrCommentNotFound = &Errno{Code: 404, Msg: "评论不存在"}
+	// ErrCommentForbidden 操作的不是自己发表的评论
+	ErrCommentForbidden = &Errno{Code: 403, Msg: "无权操作该评论"}
 	ErrPasswordWrong = &Errno{Code: 401, Msg: "用户名或密码错误"}
 	ErrUnauthorized  = &Errno{Code: 401, Msg: "未登录或凭证已失效"}
 	ErrMfaCodeNeeded = &Errno{Code: 401, Msg: "需要 MFA 验证码"}

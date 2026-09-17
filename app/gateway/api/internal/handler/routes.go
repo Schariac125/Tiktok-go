@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	interaction "tiktok-go/app/gateway/api/internal/handler/interaction"
 	user "tiktok-go/app/gateway/api/internal/handler/user"
 	video "tiktok-go/app/gateway/api/internal/handler/video"
 	"tiktok-go/app/gateway/api/internal/svc"
@@ -15,6 +16,82 @@ import (
 )
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodGet,
+				Path:    "/list",
+				Handler: interaction.ListLikeHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/like"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodGet,
+				Path:    "/list",
+				Handler: interaction.ListCommentHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/comment"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.AuthMiddleware},
+			[]rest.Route{
+				{
+					Method:  http.MethodPost,
+					Path:    "/action",
+					Handler: interaction.LikeHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodDelete,
+					Path:    "/delete",
+					Handler: interaction.UnlikeHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/like"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.AuthMiddleware},
+			[]rest.Route{
+				{
+					Method:  http.MethodDelete,
+					Path:    "/delete",
+					Handler: interaction.DeleteCommentHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPost,
+					Path:    "/publish",
+					Handler: interaction.PublishCommentHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/comment"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/login",
+				Handler: user.LoginHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/register",
+				Handler: user.RegisterHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/user"),
+	)
+
 	server.AddRoutes(
 		rest.WithMiddlewares(
 			[]rest.Middleware{serverCtx.AuthMiddleware},
@@ -54,48 +131,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	)
 
 	server.AddRoutes(
-		[]rest.Route{
-			{
-				Method:  http.MethodPost,
-				Path:    "/login",
-				Handler: user.LoginHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodPost,
-				Path:    "/register",
-				Handler: user.RegisterHandler(serverCtx),
-			},
-		},
-		rest.WithPrefix("/user"),
-	)
-
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				Method:  http.MethodGet,
-				Path:    "/feed",
-				Handler: video.FeedVideoHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodGet,
-				Path:    "/list",
-				Handler: video.ListVideoHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodGet,
-				Path:    "/popular",
-				Handler: video.PopularVideoHandler(serverCtx),
-			},
-			{
-				Method:  http.MethodPost,
-				Path:    "/search",
-				Handler: video.SearchVideoHandler(serverCtx),
-			},
-		},
-		rest.WithPrefix("/video"),
-	)
-
-	server.AddRoutes(
 		rest.WithMiddlewares(
 			[]rest.Middleware{serverCtx.AuthMiddleware},
 			[]rest.Route{
@@ -122,6 +157,32 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				},
 			}...,
 		),
+		rest.WithPrefix("/video"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodGet,
+				Path:    "/feed",
+				Handler: video.FeedVideoHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/list",
+				Handler: video.ListVideoHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/popular",
+				Handler: video.PopularVideoHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/search",
+				Handler: video.SearchVideoHandler(serverCtx),
+			},
+		},
 		rest.WithPrefix("/video"),
 	)
 }

@@ -58,3 +58,21 @@ func (s *VideoServiceServer) SearchVideo(ctx context.Context, in *video.SearchVi
 	l := logic.NewSearchVideoLogic(ctx, s.svcCtx)
 	return l.SearchVideo(in)
 }
+
+// 按 id 批量查视频，供互动服务组装点赞列表
+func (s *VideoServiceServer) BatchGetVideo(ctx context.Context, in *video.BatchGetVideoReq) (*video.BatchGetVideoResp, error) {
+	l := logic.NewBatchGetVideoLogic(ctx, s.svcCtx)
+	return l.BatchGetVideo(in)
+}
+
+// 增减视频点赞数，供互动服务把点赞结果同步回数据库
+func (s *VideoServiceServer) IncrLikeCount(ctx context.Context, in *video.IncrLikeCountReq) (*video.IncrLikeCountResp, error) {
+	l := logic.NewIncrLikeCountLogic(ctx, s.svcCtx)
+	return l.IncrLikeCount(in)
+}
+
+// 增减视频评论数，供互动服务在发表/删除评论时维护
+func (s *VideoServiceServer) IncrCommentCount(ctx context.Context, in *video.IncrCommentCountReq) (*video.IncrCommentCountResp, error) {
+	l := logic.NewIncrCommentCountLogic(ctx, s.svcCtx)
+	return l.IncrCommentCount(in)
+}
