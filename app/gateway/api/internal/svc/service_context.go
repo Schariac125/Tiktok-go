@@ -6,6 +6,7 @@ import (
 	"tiktok-go/app/gateway/api/internal/config"
 	"tiktok-go/app/gateway/api/internal/middleware"
 	"tiktok-go/app/interaction/rpc/interactionservice"
+	"tiktok-go/app/social/rpc/socialservice"
 	"tiktok-go/app/user/rpc/userservice"
 	"tiktok-go/app/video/rpc/videoservice"
 	"tiktok-go/pkg/jwt"
@@ -18,6 +19,7 @@ type ServiceContext struct {
 	UserRpc        userservice.UserService
 	VideoRpc       videoservice.VideoService
 	InteractionRpc interactionservice.InteractionService
+	SocialRpc      socialservice.SocialService
 	Signer         *jwt.Signer
 	OSS            storage.Object
 }
@@ -30,6 +32,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		UserRpc:        userservice.NewUserService(zrpc.MustNewClient(c.UserRpc)),
 		VideoRpc:       videoservice.NewVideoService(zrpc.MustNewClient(c.VideoRpc)),
 		InteractionRpc: interactionservice.NewInteractionService(zrpc.MustNewClient(c.InteractionRpc)),
+		SocialRpc:      socialservice.NewSocialService(zrpc.MustNewClient(c.SocialRpc)),
 		Signer:         signer,
 		// 惰性初始化：OSS 凭据缺失不影响服务启动，上传时才报错
 		OSS: storage.NewLazyOSS(c.OSS),

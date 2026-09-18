@@ -8,6 +8,7 @@ import (
 	"time"
 
 	interaction "tiktok-go/app/gateway/api/internal/handler/interaction"
+	social "tiktok-go/app/gateway/api/internal/handler/social"
 	user "tiktok-go/app/gateway/api/internal/handler/user"
 	video "tiktok-go/app/gateway/api/internal/handler/video"
 	"tiktok-go/app/gateway/api/internal/svc"
@@ -74,6 +75,46 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			}...,
 		),
 		rest.WithPrefix("/comment"),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.AuthMiddleware},
+			[]rest.Route{
+				{
+					Method:  http.MethodPost,
+					Path:    "/follow",
+					Handler: social.FollowHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/friends",
+					Handler: social.ListFriendHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodDelete,
+					Path:    "/unfollow",
+					Handler: social.UnfollowHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/relation"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodGet,
+				Path:    "/follower",
+				Handler: social.ListFollowerHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/following",
+				Handler: social.ListFollowingHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/follow"),
 	)
 
 	server.AddRoutes(

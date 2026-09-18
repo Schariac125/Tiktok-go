@@ -66,3 +66,15 @@ type VideoPageData {
 type VideoFeedData {
 	Items []Video `json:"items"` // 视频列表
 }
+
+// 用户简要信息，关注/粉丝/好友列表用
+type UserBrief {
+	Id       int64  `json:"id"`       // ID 编号
+	Username string `json:"username"` // 用户名
+}
+
+// 用户简要信息分页数据
+type UserBriefPageData {
+	Items []UserBrief `json:"items"` // 用户列表
+	Total int64       `json:"total"` // 总数
+}

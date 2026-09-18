@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+package social;
+
+option go_package = "./social";
+
+// ------- 数据模型 -------
+
+// 响应状态
+message Status {
+  int32 code = 1; // 状态码
+  string msg = 2; // 提示信息
+}
+
+// 用户简要信息，关注/粉丝/好友列表用
+message UserBrief {
+  int64 id = 1;       // ID 编号
+  string username = 2; // 用户名
+}
+
+// 用户简要信息分页数据
+message UserBriefPageData {
+  repeated UserBrief items = 1;
+  int64 total = 2;
+}
+
+// ------- 关注 / 取关 -------
+
+message FollowReq {
+  int64 user_id = 1;    // 关注者（网关从登录态注入）
+  int64 to_user_id = 2; // 被关注者
+}
+
+message FollowResp {
+  Status base = 1;
+}
+
+message UnfollowReq {
+  int64 user_id = 1;    // 取关的人（网关从登录态注入）
+  int64 to_user_id = 2; // 被取关者
+}
+
+message UnfollowResp {
+  Status base = 1;
+}
+
+// ------- 关注列表 -------
+
+message ListFollowingReq {
+  int64 user_id = 1;   // 要查看的用户 id
+  int64 page_num = 2;  // 页码
+  int64 page_size = 3; // 每页数量
+}
+
+message ListFollowingResp {
+  Status base = 1;
+  UserBriefPageData data = 2;
+}
+
+// ------- 粉丝列表 -------
+
+message ListFollowerReq {
+  int64 user_id = 1;   // 要查看的用户 id
+  int64 page_num = 2;  // 页码
+  int64 page_size = 3; // 每页数量
+}
+
+message ListFollowerResp {
+  Status base = 1;
+  UserBriefPageData data = 2;
+}
+
+// ------- 好友列表 -------
+
+message ListFriendReq {
+  int64 user_id = 1;   // 当前用户（网关从登录态注入），只允许查自己的
+  int64 page_num = 2;  // 页码
+  int64 page_size = 3; // 每页数量
+}
+
+message ListFriendResp {
+  Status base = 1;
+  UserBriefPageData data = 2;
+}
+
+service SocialService {
+  // 关注 POST /relation/follow
+  rpc Follow(FollowReq) returns (FollowResp);
+  // 取关 DELETE /relation/unfollow
+  rpc Unfollow(UnfollowReq) returns (UnfollowResp);
+  // 关注列表 GET /follow/following
+  rpc ListFollowing(ListFollowingReq) returns (ListFollowingResp);
+  // 粉丝列表 GET /follow/follower
+  rpc ListFollower(ListFollowerReq) returns (ListFollowerResp);
+  // 好友列表 GET /relation/friends
+  rpc ListFriend(ListFriendReq) returns (ListFriendResp);
+}

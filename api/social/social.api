@@ -1,0 +1,50 @@
+syntax = "v1"
+
+import "../model.api"
+
+// 社交模块 —— 无需登录鉴权的路由
+//
+// 注意：query 参数必须用 form tag。go-zero 的 httpx.Parse 只在 form tag 上解析
+// query，写成 json tag 会直接报 field "xxx" is not set。
+
+type (
+	// 关注列表请求，参数走 query
+	ListFollowingReq {
+		UserId   int64 `form:"user_id"`            // 要查看的用户 id
+		PageNum  int64 `form:"page_num,optional"`  // 页码
+		PageSize int64 `form:"page_size,optional"` // 每页数量
+	}
+
+	// 关注列表响应
+	ListFollowingResp {
+		Base Status            `json:"base"` // 响应状态
+		Data UserBriefPageData `json:"data"` // 该用户关注的人
+	}
+
+	// 粉丝列表请求，参数走 query
+	ListFollowerReq {
+		UserId   int64 `form:"user_id"`            // 要查看的用户 id
+		PageNum  int64 `form:"page_num,optional"`  // 页码
+		PageSize int64 `form:"page_size,optional"` // 每页数量
+	}
+
+	// 粉丝列表响应
+	ListFollowerResp {
+		Base Status            `json:"base"` // 响应状态
+		Data UserBriefPageData `json:"data"` // 该用户的粉丝
+	}
+)
+
+@server (
+	prefix: /follow
+	group:  social
+)
+service gateway {
+	// 查看某个人的关注列表
+	@handler listFollowing
+	get /following (ListFollowingReq) returns (ListFollowingResp)
+
+	// 粉丝列表
+	@handler listFollower
+	get /follower (ListFollowerReq) returns (ListFollowerResp)
+}

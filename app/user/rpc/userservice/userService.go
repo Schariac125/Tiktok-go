@@ -14,6 +14,8 @@ import (
 )
 
 type (
+	BatchGetUserReq       = user.BatchGetUserReq
+	BatchGetUserResp      = user.BatchGetUserResp
 	BindMFAReq            = user.BindMFAReq
 	BindMFAResp           = user.BindMFAResp
 	GetMFAQrcodeReq       = user.GetMFAQrcodeReq
@@ -46,6 +48,8 @@ type (
 		BindMFA(ctx context.Context, in *BindMFAReq, opts ...grpc.CallOption) (*BindMFAResp, error)
 		// 按用户名查用户，供其他服务把用户名解析成 user_id（如视频搜索按作者筛选）
 		GetUserByUsername(ctx context.Context, in *GetUserByUsernameReq, opts ...grpc.CallOption) (*GetUserByUsernameResp, error)
+		// 按 id 批量查用户，供其他服务补齐用户名等信息（如社交的关注/粉丝列表）
+		BatchGetUser(ctx context.Context, in *BatchGetUserReq, opts ...grpc.CallOption) (*BatchGetUserResp, error)
 	}
 
 	defaultUserService struct {
@@ -99,4 +103,10 @@ func (m *defaultUserService) BindMFA(ctx context.Context, in *BindMFAReq, opts .
 func (m *defaultUserService) GetUserByUsername(ctx context.Context, in *GetUserByUsernameReq, opts ...grpc.CallOption) (*GetUserByUsernameResp, error) {
 	client := user.NewUserServiceClient(m.cli.Conn())
 	return client.GetUserByUsername(ctx, in, opts...)
+}
+
+// 按 id 批量查用户，供其他服务补齐用户名等信息（如社交的关注/粉丝列表）
+func (m *defaultUserService) BatchGetUser(ctx context.Context, in *BatchGetUserReq, opts ...grpc.CallOption) (*BatchGetUserResp, error) {
+	client := user.NewUserServiceClient(m.cli.Conn())
+	return client.BatchGetUser(ctx, in, opts...)
 }

@@ -28,6 +28,15 @@ func convertUser(u *model.User) *user.User {
 	}
 }
 
+// convertUsers 批量转换，保持返回非 nil slice 以便序列化成 [] 而不是 null
+func convertUsers(list []*model.User) []*user.User {
+	out := make([]*user.User, 0, len(list))
+	for _, u := range list {
+		out = append(out, convertUser(u))
+	}
+	return out
+}
+
 func formatTime(t time.Time) string {
 	return t.Local().Format("2006-01-02 15:04:05")
 }

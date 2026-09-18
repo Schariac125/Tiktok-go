@@ -107,6 +107,17 @@ message GetUserByUsernameResp {
   User data = 2;
 }
 
+// ------- 按 id 批量查用户 -------
+
+message BatchGetUserReq {
+  repeated int64 ids = 1; // 用户 id 列表
+}
+
+message BatchGetUserResp {
+  Status base = 1;
+  repeated User items = 2; // 只返回存在的用户
+}
+
 service UserService {
   // 注册 POST /user/register
   rpc Register(RegisterReq) returns (RegisterResp);
@@ -122,4 +133,6 @@ service UserService {
   rpc BindMFA(BindMFAReq) returns (BindMFAResp);
   // 按用户名查用户，供其他服务把用户名解析成 user_id（如视频搜索按作者筛选）
   rpc GetUserByUsername(GetUserByUsernameReq) returns (GetUserByUsernameResp);
+  // 按 id 批量查用户，供其他服务补齐用户名等信息（如社交的关注/粉丝列表）
+  rpc BatchGetUser(BatchGetUserReq) returns (BatchGetUserResp);
 }

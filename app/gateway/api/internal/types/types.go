@@ -54,6 +54,14 @@ type FeedVideoResp struct {
 	Data VideoFeedData `json:"data"` // 视频流
 }
 
+type FollowReq struct {
+	ToUserId int64 `json:"to_user_id"` // 要关注的人
+}
+
+type FollowResp struct {
+	Base Status `json:"base"` // 响应状态
+}
+
 type GetMFAQrcodeResp struct {
 	Base Status    `json:"base"` // 响应状态
 	Data MFAQrcode `json:"data"` // MFA 二维码
@@ -87,6 +95,38 @@ type ListCommentReq struct {
 type ListCommentResp struct {
 	Base Status          `json:"base"` // 响应状态
 	Data CommentListData `json:"data"` // 评论列表
+}
+
+type ListFollowerReq struct {
+	UserId   int64 `form:"user_id"`            // 要查看的用户 id
+	PageNum  int64 `form:"page_num,optional"`  // 页码
+	PageSize int64 `form:"page_size,optional"` // 每页数量
+}
+
+type ListFollowerResp struct {
+	Base Status            `json:"base"` // 响应状态
+	Data UserBriefPageData `json:"data"` // 该用户的粉丝
+}
+
+type ListFollowingReq struct {
+	UserId   int64 `form:"user_id"`            // 要查看的用户 id
+	PageNum  int64 `form:"page_num,optional"`  // 页码
+	PageSize int64 `form:"page_size,optional"` // 每页数量
+}
+
+type ListFollowingResp struct {
+	Base Status            `json:"base"` // 响应状态
+	Data UserBriefPageData `json:"data"` // 该用户关注的人
+}
+
+type ListFriendReq struct {
+	PageNum  int64 `form:"page_num,optional"`  // 页码
+	PageSize int64 `form:"page_size,optional"` // 每页数量
+}
+
+type ListFriendResp struct {
+	Base Status            `json:"base"` // 响应状态
+	Data UserBriefPageData `json:"data"` // 互相关注的人
 }
 
 type ListLikeReq struct {
@@ -181,6 +221,14 @@ type Status struct {
 	Msg  string `json:"msg"`  // 提示信息
 }
 
+type UnfollowReq struct {
+	ToUserId int64 `json:"to_user_id"` // 要取关的人
+}
+
+type UnfollowResp struct {
+	Base Status `json:"base"` // 响应状态
+}
+
 type UnlikeReq struct {
 	VideoId   int64 `json:"video_id,optional"`   // 视频 id，与 comment_id 至少有一个
 	CommentId int64 `json:"comment_id,optional"` // 评论 id
@@ -202,6 +250,16 @@ type User struct {
 	CreateAt  string `json:"create_at"`  // 创建时间
 	UpdatedAt string `json:"updated_at"` // 更新时间
 	DeleteAt  string `json:"delete_at"`  // 软删除时间
+}
+
+type UserBrief struct {
+	Id       int64  `json:"id"`       // ID 编号
+	Username string `json:"username"` // 用户名
+}
+
+type UserBriefPageData struct {
+	Items []UserBrief `json:"items"` // 用户列表
+	Total int64       `json:"total"` // 总数
 }
 
 type Video struct {

@@ -64,3 +64,9 @@ func (s *UserServiceServer) GetUserByUsername(ctx context.Context, in *user.GetU
 	l := logic.NewGetUserByUsernameLogic(ctx, s.svcCtx)
 	return l.GetUserByUsername(in)
 }
+
+// 按 id 批量查用户，供其他服务补齐用户名等信息（如社交的关注/粉丝列表）
+func (s *UserServiceServer) BatchGetUser(ctx context.Context, in *user.BatchGetUserReq) (*user.BatchGetUserResp, error) {
+	l := logic.NewBatchGetUserLogic(ctx, s.svcCtx)
+	return l.BatchGetUser(in)
+}

@@ -1,0 +1,59 @@
+syntax = "v1"
+
+import "../model.api"
+
+// 社交模块 —— 需要登录鉴权的路由
+// 请求头携带 Access-Token、Refresh-Token，由 AuthMiddleware 统一校验
+
+type (
+	// 关注请求
+	FollowReq {
+		ToUserId int64 `json:"to_user_id"` // 要关注的人
+	}
+
+	// 关注响应
+	FollowResp {
+		Base Status `json:"base"` // 响应状态
+	}
+
+	// 取关请求
+	UnfollowReq {
+		ToUserId int64 `json:"to_user_id"` // 要取关的人
+	}
+
+	// 取关响应
+	UnfollowResp {
+		Base Status `json:"base"` // 响应状态
+	}
+
+	// 好友列表请求，参数走 query
+	ListFriendReq {
+		PageNum  int64 `form:"page_num,optional"`  // 页码
+		PageSize int64 `form:"page_size,optional"` // 每页数量
+	}
+
+	// 好友列表响应
+	ListFriendResp {
+		Base Status            `json:"base"` // 响应状态
+		Data UserBriefPageData `json:"data"` // 互相关注的人
+	}
+)
+
+@server (
+	prefix:     /relation
+	group:      social
+	middleware: AuthMiddleware
+)
+service gateway {
+	// 关注
+	@handler follow
+	post /follow (FollowReq) returns (FollowResp)
+
+	// 取关，硬删除
+	@handler unfollow
+	delete /unfollow (UnfollowReq) returns (UnfollowResp)
+
+	// 好友列表（互相关注），只允许获取自己的
+	@handler listFriend
+	get /friends (ListFriendReq) returns (ListFriendResp)
+}

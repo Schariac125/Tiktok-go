@@ -24,6 +24,12 @@ InteractionRpc:
       - 127.0.0.1:2379
     Key: interaction.rpc
 
+SocialRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: social.rpc
+
 # 阿里云 OSS（视频、封面等对象存储，投稿时由网关直传）
 OSS:
   Endpoint: "oss-cn-beijing.aliyuncs.com"
