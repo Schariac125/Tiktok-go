@@ -1,0 +1,22 @@
+# 容器内运行用的配置：中间件地址走 compose 的服务名，而非宿主机的 127.0.0.1
+Name: social.rpc
+ListenOn: 0.0.0.0:8083
+Etcd:
+  Hosts:
+  - etcd:2379
+  Key: social.rpc
+
+MySQL:
+  DataSource: root:${MYSQL_ROOT_PASSWORD}@tcp(mysql:3306)/tiktok?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
+
+# model 缓存
+CacheRedis:
+  - Host: redis:6379
+    Type: node
+
+# 关注/粉丝/好友列表要补齐用户名
+UserRpc:
+  Etcd:
+    Hosts:
+      - etcd:2379
+    Key: user.rpc

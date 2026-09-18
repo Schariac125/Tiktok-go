@@ -9,8 +9,8 @@ import (
 	"tiktok-go/app/interaction/rpc/internal/config"
 	"tiktok-go/app/interaction/rpc/internal/server"
 	"tiktok-go/app/interaction/rpc/internal/svc"
+	"tiktok-go/pkg/env"
 
-	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"
 	"github.com/zeromicro/go-zero/zrpc"
 	"google.golang.org/grpc"
@@ -23,7 +23,7 @@ func main() {
 	flag.Parse()
 
 	var c config.Config
-	conf.MustLoad(*configFile, &c)
+	env.MustLoad(*configFile, &c)
 	svcCtx := svc.NewServiceContext(c)
 
 	// 点赞的落库任务随进程启停：接口只写队列，由它按周期刷进数据库

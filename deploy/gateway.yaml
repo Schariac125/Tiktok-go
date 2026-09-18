@@ -25,15 +25,21 @@ InteractionRpc:
       - etcd:2379
     Key: interaction.rpc
 
+SocialRpc:
+  Etcd:
+    Hosts:
+      - etcd:2379
+    Key: social.rpc
+
 # 阿里云 OSS（视频、封面等对象存储，投稿时由网关直传）
 OSS:
   Endpoint: "oss-cn-beijing.aliyuncs.com"
-  AccessKeyID: ""
-  AccessKeySecret: ""
+  AccessKeyID: "${OSS_ACCESS_KEY_ID}"
+  AccessKeySecret: "${OSS_ACCESS_KEY_SECRET}"
   BucketName: ""
   Domain: ""
 
 # 与 user.rpc 的 JWT.AccessSecret 保持一致
 JWT:
-  AccessSecret: "tiktok-go-dev-secret-change-me"
+  AccessSecret: "${JWT_ACCESS_SECRET}"
   AccessExpire: 2h

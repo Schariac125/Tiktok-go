@@ -12,9 +12,19 @@
 #   - 端口与本项目各 etc/*.yaml 里的配置一一对应，改动这里要同步改配置。
 #   - MySQL 的 --default-time-zone=+08:00 不能少：库内时间按东八区存，
 #     而 DSN 里写的 loc=Asia/Shanghai，两边必须一致，否则读出的时间会差 8 小时。
-#   - 密码为本地开发用，生产环境请改用 .env 或 secrets。
+#   - 密码等私密信息不在本文件里，由同目录的 .env 提供（可复制 .env.example）。
 
 name: tiktok-go
+
+# 各业务服务共用的私密配置，值来自同目录的 .env。
+# 用 YAML 锚点复用，省得在 5 个服务里各写一遍；
+# 缺变量时 compose 会直接报错，而不是把空密码注进容器。
+x-service-env: &service-env
+  MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?未设置，请先复制 .env.example 为 .env}
+  JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?未设置，请先复制 .env.example 为 .env}
+  # OSS 没配也能启动，走到上传接口才会失败，所以允许为空
+  OSS_ACCESS_KEY_ID: ${OSS_ACCESS_KEY_ID:-}
+  OSS_ACCESS_KEY_SECRET: ${OSS_ACCESS_KEY_SECRET:-}
 
 services:
   etcd:
@@ -45,14 +55,14 @@ services:
     ports:
       - "13306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: "350322"
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?未设置，请先复制 .env.example 为 .env}
       TZ: Asia/Shanghai
     command:
       - --default-time-zone=+08:00
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p350322"]
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysqladmin ping -h 127.0.0.1 -uroot"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -92,6 +102,7 @@ services:
         condition: service_healthy
     volumes:
       - ./deploy/user.yaml:/app/etc/user.yaml:ro
+    environment: *service-env
     healthcheck:
       test: ["CMD", "nc", "-z", "127.0.0.1", "8080"]
       interval: 5s
@@ -115,6 +126,7 @@ services:
         condition: service_healthy
     volumes:
       - ./deploy/video.yaml:/app/etc/video.yaml:ro
+    environment: *service-env
     healthcheck:
       test: ["CMD", "nc", "-z", "127.0.0.1", "8081"]
       interval: 5s
@@ -140,8 +152,36 @@ services:
         condition: service_healthy
     volumes:
       - ./deploy/interaction.yaml:/app/etc/interaction.yaml:ro
+    environment: *service-env
     healthcheck:
       test: ["CMD", "nc", "-z", "127.0.0.1", "8082"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  social-rpc:
+    build:
+      context: .
+      dockerfile: app/social/rpc/Dockerfile
+    image: tiktok-go/social-rpc:latest
+    container_name: tiktok-social-rpc
+    restart: unless-stopped
+    depends_on:
+      etcd:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      # 关注/粉丝/好友列表要跨服务取用户名
+      user-rpc:
+        condition: service_healthy
+    volumes:
+      - ./deploy/social.yaml:/app/etc/social.yaml:ro
+    environment: *service-env
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "8083"]
       interval: 5s
       timeout: 3s
       retries: 12
@@ -156,7 +196,7 @@ services:
     restart: unless-stopped
     ports:
       - "8888:8888"
-    # 三个 rpc 都就绪（端口通）后再起，避免启动时 etcd 里还没注册记录
+    # 四个 rpc 都就绪（端口通）后再起，避免启动时 etcd 里还没注册记录
     depends_on:
       user-rpc:
         condition: service_healthy
@@ -164,8 +204,11 @@ services:
         condition: service_healthy
       interaction-rpc:
         condition: service_healthy
+      social-rpc:
+        condition: service_healthy
     volumes:
       - ./deploy/gateway.yaml:/app/etc/gateway.yaml:ro
+    environment: *service-env
     healthcheck:
       test: ["CMD", "nc", "-z", "127.0.0.1", "8888"]
       interval: 5s

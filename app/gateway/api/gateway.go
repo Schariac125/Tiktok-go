@@ -10,8 +10,8 @@ import (
 	"tiktok-go/app/gateway/api/internal/config"
 	"tiktok-go/app/gateway/api/internal/handler"
 	"tiktok-go/app/gateway/api/internal/svc"
+	"tiktok-go/pkg/env"
 
-	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"
 )
 
@@ -21,7 +21,7 @@ func main() {
 	flag.Parse()
 
 	var c config.Config
-	conf.MustLoad(*configFile, &c)
+	env.MustLoad(*configFile, &c)
 
 	server := rest.MustNewServer(c.RestConf)
 	defer server.Stop()

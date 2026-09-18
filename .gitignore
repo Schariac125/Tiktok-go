@@ -1,0 +1,29 @@
+# ---- 编译与测试产物 ----
+bin/
+*.exe
+*.test
+*.out
+
+# ---- 日志与临时文件 ----
+*.log
+*.tmp
+*.bak
+
+# ---- IDE / 编辑器 ----
+.idea/
+.vscode/
+*.swp
+*.swo
+.claude
+
+# ---- 操作系统文件 ----
+.DS_Store
+Thumbs.db
+
+# ---- 本地覆盖与凭据 ----
+# compose 的本地覆写（改端口、加挂载等，不该同步给别人）
+docker-compose.override.yml
+# 环境变量文件，通常放密码
+.env
+# 填了真实凭据的配置副本，例如 deploy/gateway.local.yaml
+*.local.yaml

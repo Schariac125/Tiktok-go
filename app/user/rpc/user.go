@@ -9,8 +9,8 @@ import (
 	"tiktok-go/app/user/rpc/internal/svc"
 	"tiktok-go/app/user/rpc/user"
 	"tiktok-go/pkg/constant"
+	"tiktok-go/pkg/env"
 
-	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"
 	"github.com/zeromicro/go-zero/zrpc"
 	"google.golang.org/grpc"
@@ -23,7 +23,7 @@ func main() {
 	flag.Parse()
 
 	var c config.Config
-	conf.MustLoad(*configFile, &c)
+	env.MustLoad(*configFile, &c)
 	ctx := svc.NewServiceContext(c)
 
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
