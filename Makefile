@@ -96,12 +96,8 @@ image-build:
 	@docker build -f app/gateway/api/Dockerfile -t tiktok-go/gateway:latest .
 
 # 启动依赖中间件（etcd、mysql、redis、rocketmq），配置见 docker-compose.yml。
-# 四个数据卷由外部持有（compose 里标了 external），先建好再起容器，已存在时是空操作。
+# 数据卷由 compose 自动创建，不需要手工准备。
 infra-up:
-	@docker volume create mysql_data >/dev/null
-	@docker volume create redis_data >/dev/null
-	@docker volume create etcd_data >/dev/null
-	@docker volume create rocketmq_store >/dev/null
 	docker compose up -d
 
 # 让宿主机也能解析 host.docker.internal，指向 127.0.0.1。

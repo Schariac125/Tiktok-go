@@ -43,11 +43,16 @@ services:
       - "${BIND_ADDR:-127.0.0.1}:13306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?未设置，请先复制 .env.example 为 .env}
+      MYSQL_DATABASE: tiktok
       TZ: Asia/Shanghai
     command:
       - --default-time-zone=+08:00
     volumes:
       - mysql_data:/var/lib/mysql
+      # 首次启动（数据目录为空）时官方镜像会建好 MYSQL_DATABASE 并执行这里的 .sql，
+      # 库表自动就绪；卷里已有数据则整段跳过，所以后续加迁移仍需手工执行。
+      # 四个文件无外键，建表顺序无关。
+      - ./migration:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysqladmin ping -h 127.0.0.1 -uroot"]
       interval: 5s
@@ -268,18 +273,14 @@ services:
       start_period: 10s
 
 volumes:
-  # 卷由外部创建并持有（docker volume create，见 make infra-up）。
-  # 指定固定卷名是为了复用已有的 mysql_data / redis_data，不被加项目名前缀；
-  # external 则让 compose 只使用、不管理它们——docker compose down -v 不会误删数据。
+  # 固定卷名，不加项目名前缀，便于在 docker volume ls 里一眼认出。
+  # 不标 external：不存在时 compose 自动创建，省掉手工建卷这一步。
+  # 代价是 docker compose down -v 会连数据一起删，别带 -v。
   etcd_data:
     name: etcd_data
-    external: true
   mysql_data:
     name: mysql_data
-    external: true
   redis_data:
     name: redis_data
-    external: true
   rocketmq_store:
     name: rocketmq_store
-    external: true
