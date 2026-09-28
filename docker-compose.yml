@@ -1,5 +1,11 @@
 name: tiktok-go
 
+# 中间件端口默认只绑环回（127.0.0.1），不对局域网或公网开放。
+# 服务之间走 compose 网络用服务名互通，不经过这些端口；只有「在宿主机上跑服务」
+# 的本地开发方式需要它们，而那种方式访问的也是 127.0.0.1。
+# 例外：宿主机与容器混跑时，容器要经宿主机连 broker，这时把 BIND_ADDR 设成 0.0.0.0。
+# 网关的 8888 不在此列——它是唯一对外的入口，始终绑 0.0.0.0。
+
 x-service-env: &service-env
   MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?未设置，请先复制 .env.example 为 .env}
   JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?未设置，请先复制 .env.example 为 .env}
@@ -13,8 +19,8 @@ services:
     container_name: tiktok-etcd
     restart: unless-stopped
     ports:
-      - "2379:2379" # 客户端通信，服务注册与发现
-      - "2380:2380" # 节点间通信
+      - "${BIND_ADDR:-127.0.0.1}:2379:2379" # 客户端通信，服务注册与发现
+      - "${BIND_ADDR:-127.0.0.1}:2380:2380" # 节点间通信
     command:
       - etcd
       - --name=tiktok-etcd
@@ -34,7 +40,7 @@ services:
     container_name: mysql8
     restart: unless-stopped
     ports:
-      - "13306:3306"
+      - "${BIND_ADDR:-127.0.0.1}:13306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?未设置，请先复制 .env.example 为 .env}
       TZ: Asia/Shanghai
@@ -54,7 +60,7 @@ services:
     container_name: tiktok-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${BIND_ADDR:-127.0.0.1}:6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -68,7 +74,7 @@ services:
     container_name: tiktok-rocketmq-namesrv
     restart: unless-stopped
     ports:
-      - "9876:9876"
+      - "${BIND_ADDR:-127.0.0.1}:9876:9876"
     command: sh mqnamesrv
     healthcheck:
       test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/9876'"]
@@ -85,12 +91,16 @@ services:
       rocketmq-namesrv:
         condition: service_healthy
     ports:
-      - "10911:10911" # 客户端连接端口
-      - "10909:10909" # VIP 通道
-      - "10912:10912" # 主从同步（当前单机，预留）
+      - "${BIND_ADDR:-127.0.0.1}:10911:10911" # 客户端连接端口
+      - "${BIND_ADDR:-127.0.0.1}:10909:10909" # VIP 通道
+      - "${BIND_ADDR:-127.0.0.1}:10912:10912" # 主从同步（当前单机，预留）
     environment:
-      # 默认 host.docker.internal，见上方说明；改这里可切到别的运行方式
-      ROCKETMQ_BROKER_IP: ${ROCKETMQ_BROKER_IP:-host.docker.internal}
+      # broker 注册到 NameServer 的地址，客户端据此连它。必须显式设置——
+      # 三种运行方式要的值不同，给默认值只会让部署静默用错：
+      #   服务全在宿主机上（本地开发）  127.0.0.1
+      #   服务全在容器里（服务器部署）  rocketmq-broker
+      #   宿主机与容器混跑              host.docker.internal（另需 make rocketmq-hosts）
+      ROCKETMQ_BROKER_IP: ${ROCKETMQ_BROKER_IP:?未设置，见 .env.example}
       # 镜像默认按机器内存自动推算堆（常见 8g），开发环境给个小值即可。
       # JAVA_OPT_EXT 拼在自动推算的 -Xms/-Xmx 之后，所以这里的值生效。
       JAVA_OPT_EXT: "-Xms512m -Xmx512m -Xmn256m"

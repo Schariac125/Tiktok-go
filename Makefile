@@ -106,10 +106,11 @@ infra-up:
 
 # 让宿主机也能解析 host.docker.internal，指向 127.0.0.1。
 #
-# RocketMQ 的 broker 只注册一个对外地址，而宿主机与容器到达它的地址不同：
-# 宿主机走 127.0.0.1 的 published 端口，容器走 host.docker.internal 网关。
-# 注册域名 host.docker.internal 后，两边各自解析到能通的地址。
-# 容器侧由 Docker Desktop 提供，宿主机侧要这一行——需要 sudo，故不放进 infra-up。
+# 只有「宿主机与容器混跑」才需要：这时 broker 注册的是 host.docker.internal，
+# 容器侧由 Docker Desktop 解析，宿主机侧要这一行。同时 BIND_ADDR 得设成 0.0.0.0，
+# 否则端口只绑环回，容器够不着。
+#
+# 纯本地开发（服务都在宿主机上）用 ROCKETMQ_BROKER_IP=127.0.0.1，不需要这一步。
 rocketmq-hosts:
 	@grep -q "host.docker.internal" /etc/hosts \
 		&& echo "已存在，跳过" \
