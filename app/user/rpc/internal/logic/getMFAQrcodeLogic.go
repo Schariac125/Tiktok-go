@@ -33,8 +33,11 @@ func (l *GetMFAQrcodeLogic) GetMFAQrcode(in *user.GetMFAQrcodeReq) (*user.GetMFA
 	}
 
 	// 生成密钥与扫码二维码；secret 不落库，绑定验证通过时才提交
-	secret := mfa.GenerateSecret()
-	qrcode, err := mfa.QrcodeBase64(mfa.OtpauthURL(secret, l.account(in.UserId)))
+	secret, otpauthURL, err := mfa.NewKey(l.account(in.UserId))
+	if err != nil {
+		return nil, err
+	}
+	qrcode, err := mfa.QrcodeBase64(otpauthURL)
 	if err != nil {
 		return nil, err
 	}
