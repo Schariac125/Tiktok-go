@@ -37,7 +37,7 @@ func (l *BatchGetVideoLogic) BatchGetVideo(in *video.BatchGetVideoReq) (*video.B
 	if len(ids) == 0 {
 		return &video.BatchGetVideoResp{
 			Base:  toStatus(errno.OK),
-			Items: convertVideos(nil),
+			Items: convertVideos(l.ctx, l.svcCtx.Redis, nil),
 		}, nil
 	}
 
@@ -48,6 +48,6 @@ func (l *BatchGetVideoLogic) BatchGetVideo(in *video.BatchGetVideoReq) (*video.B
 
 	return &video.BatchGetVideoResp{
 		Base:  toStatus(errno.OK),
-		Items: convertVideos(list),
+		Items: convertVideos(l.ctx, l.svcCtx.Redis, list),
 	}, nil
 }

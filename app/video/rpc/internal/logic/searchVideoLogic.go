@@ -46,7 +46,7 @@ func (l *SearchVideoLogic) SearchVideo(in *video.SearchVideoReq) (*video.SearchV
 	if total == 0 {
 		return &video.SearchVideoResp{
 			Base: toStatus(errno.OK),
-			Data: &video.VideoPageData{Items: convertVideos(nil)},
+			Data: &video.VideoPageData{Items: convertVideos(l.ctx, l.svcCtx.Redis, nil)},
 		}, nil
 	}
 
@@ -61,6 +61,6 @@ func (l *SearchVideoLogic) SearchVideo(in *video.SearchVideoReq) (*video.SearchV
 
 	return &video.SearchVideoResp{
 		Base: toStatus(errno.OK),
-		Data: &video.VideoPageData{Items: convertVideos(list), Total: total},
+		Data: &video.VideoPageData{Items: convertVideos(l.ctx, l.svcCtx.Redis, list), Total: total},
 	}, nil
 }

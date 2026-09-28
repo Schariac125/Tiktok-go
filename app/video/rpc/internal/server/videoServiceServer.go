@@ -65,10 +65,10 @@ func (s *VideoServiceServer) BatchGetVideo(ctx context.Context, in *video.BatchG
 	return l.BatchGetVideo(in)
 }
 
-// 增减视频点赞数，供互动服务把点赞结果同步回数据库
-func (s *VideoServiceServer) IncrLikeCount(ctx context.Context, in *video.IncrLikeCountReq) (*video.IncrLikeCountResp, error) {
-	l := logic.NewIncrLikeCountLogic(ctx, s.svcCtx)
-	return l.IncrLikeCount(in)
+// 设置视频点赞数（绝对值），供互动服务的物化任务把 Redis 计数写回数据库。
+func (s *VideoServiceServer) SetLikeCount(ctx context.Context, in *video.SetLikeCountReq) (*video.SetLikeCountResp, error) {
+	l := logic.NewSetLikeCountLogic(ctx, s.svcCtx)
+	return l.SetLikeCount(in)
 }
 
 // 增减视频评论数，供互动服务在发表/删除评论时维护

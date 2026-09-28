@@ -1,7 +1,7 @@
-// Package task 组装互动模块自己的队列消费逻辑。
+// Package task 组装互动模块自己的点赞队列逻辑。
 //
 // 队列的投递与消费由 pkg/mq 提供（当前实现是 RocketMQ），这里只负责点赞特有的
-// 部分：队列项的格式、顺序键的取法、幂等落库、以及按目标类型更新计数。
+// 部分：消息格式、顺序键的取法、幂等落库，以及维护 Redis 里的点赞集合。
 package task
 
 import (
@@ -12,13 +12,11 @@ import (
 	"strings"
 
 	"tiktok-go/app/interaction/rpc/model"
-	"tiktok-go/app/video/rpc/video"
-	"tiktok-go/app/video/rpc/videoservice"
 	"tiktok-go/pkg/constant"
-	"tiktok-go/pkg/errno"
 	"tiktok-go/pkg/mq"
 
 	"github.com/zeromicro/go-zero/core/logx"
+	"github.com/zeromicro/go-zero/core/stores/redis"
 )
 
 // ErrUnavailable 队列不可用（未配置 MQ），调用方据此决定是报错还是降级
@@ -32,15 +30,14 @@ const (
 
 // likeHandler 处理点赞队列里的单条变更
 type likeHandler struct {
-	likes    model.UserLikeModel
-	comments model.CommentModel
-	videos   videoservice.VideoService
+	redis *redis.Redis
+	likes model.UserLikeModel
 }
 
 // NewLikeHandler 构造点赞变更的消费逻辑。
-// 点赞是高频操作，接口只投递消息就返回，由这个 handler 异步刷进数据库并更新计数。
-func NewLikeHandler(likes model.UserLikeModel, comments model.CommentModel, videos videoservice.VideoService) mq.Handler {
-	h := &likeHandler{likes: likes, comments: comments, videos: videos}
+// 点赞是高频操作，接口只投递消息就返回，由这个 handler 异步落库并维护计数。
+func NewLikeHandler(r *redis.Redis, likes model.UserLikeModel) mq.Handler {
+	h := &likeHandler{redis: r, likes: likes}
 	return h.handle
 }
 
@@ -74,10 +71,13 @@ func likeKey(userId, targetType, targetId uint64) string {
 	return fmt.Sprintf("%d:%d:%d", userId, targetType, targetId)
 }
 
-// handle 落库一条变更，并按幂等结果调整计数。
+// handle 处理一条点赞变更，做两件事：
 //
-// 可能被重复调用：MQ 是 at-least-once，消费失败会重投。因此依赖
-// InsertIgnore / DeleteOne 的影响行数判断是否真的变更过，而不是假设只调用一次。
+//	1. 落 user_like 表 —— 唯一持久真相
+//	2. 改 Redis 点赞集合 —— 计数的权威来源，计数 = SCARD
+//
+// 两步各自幂等，且不能互相短路：MQ 是 at-least-once，上一次可能正是卡在第 2 步
+// 才重投的。若因为第 1 步「没真的改」就跳过第 2 步，那次失败就永远补不上了。
 func (h *likeHandler) handle(ctx context.Context, body []byte) error {
 	action, userId, targetType, targetId, err := decodeItem(string(body))
 	if err != nil {
@@ -87,48 +87,90 @@ func (h *likeHandler) handle(ctx context.Context, body []byte) error {
 		return nil
 	}
 
-	var affected int64
+	// 1. 持久化。InsertIgnore / DeleteOne 靠唯一索引去重，重投不会写重复。
 	if action == actionLike {
-		affected, err = h.likes.InsertIgnore(ctx, userId, targetType, targetId)
+		_, err = h.likes.InsertIgnore(ctx, userId, targetType, targetId)
 	} else {
-		affected, err = h.likes.DeleteOne(ctx, userId, targetType, targetId)
+		_, err = h.likes.DeleteOne(ctx, userId, targetType, targetId)
 	}
 	if err != nil {
 		return err
 	}
-	// 没有真正增删（重复点赞、重复取消）就不动计数
-	if affected == 0 {
-		return nil
+
+	// 2. 计数
+	if err := h.ensureSetLoaded(ctx, targetType, targetId); err != nil {
+		return err
+	}
+	if err := h.updateCountSet(ctx, action, userId, targetType, targetId); err != nil {
+		return err
 	}
 
-	delta := int64(1)
-	if action == actionUnlike {
-		delta = -1
+	// 3. 标记该目标的计数待物化
+	//
+	// 不区分「计数是否真的变了」：重复消息很少，多刷一次只是多一条 UPDATE；
+	// 而漏刷会让 MySQL 副本一直停在旧值。这个标记失败也不重投——Redis 计数
+	// 本身已经是准的，标记丢了只影响副本的新鲜度。
+	if _, err := h.redis.SaddCtx(ctx, constant.LikeDirtyKey(targetType), targetId); err != nil {
+		logx.Errorf("标记点赞计数待物化失败 target=%d/%d: %v", targetType, targetId, err)
 	}
-	return h.applyCountDelta(ctx, targetType, targetId, delta)
+	return nil
 }
 
-// applyCountDelta 调整目标上的点赞数。
-// video 表归 video 服务管，这里走 rpc 更新；comment 表是本服务的，直接改。
-func (h *likeHandler) applyCountDelta(ctx context.Context, targetType, targetId uint64, delta int64) error {
-	switch targetType {
-	case constant.LikeTargetVideo:
-		resp, err := h.videos.IncrLikeCount(ctx, &video.IncrLikeCountReq{
-			VideoId: int64(targetId),
-			Delta:   delta,
-		})
-		if err != nil {
-			return err
-		}
-		if resp.GetBase().GetCode() != errno.OK.Code {
-			return fmt.Errorf("更新视频点赞数被拒: %s", resp.GetBase().GetMsg())
-		}
-		return nil
-	case constant.LikeTargetComment:
-		return h.comments.IncrLikeCount(ctx, targetId, delta)
-	default:
-		return fmt.Errorf("未知的点赞目标类型 %d", targetType)
+// ensureSetLoaded 保证集合是完整的。
+//
+// 集合可能因为 Redis 数据丢失而整个不见，此时直接 SADD 会让集合只剩这一个成员，
+// 计数从 1 开始而不是真实值。所以发现 key 不存在时先从 user_like 重建——
+// user_like 才是真相，集合只是它的投影。
+//
+// 注意本函数在落库之后调用，重建出来的集合已经包含本次变更，所以随后的
+// SADD/SREM 会返回 0，这是正常的。
+func (h *likeHandler) ensureSetLoaded(ctx context.Context, targetType, targetId uint64) error {
+	key := constant.LikeSetKey(targetType, targetId)
+
+	exists, err := h.redis.ExistsCtx(ctx, key)
+	if err != nil {
+		return fmt.Errorf("检查点赞集合 %s: %w", key, err)
 	}
+	if exists {
+		return nil
+	}
+
+	userIds, err := h.likes.FindUserIdsByTarget(ctx, targetType, targetId)
+	if err != nil {
+		return fmt.Errorf("重建点赞集合 %s: %w", key, err)
+	}
+	if len(userIds) == 0 {
+		// 目标确实没人赞过，不是丢失，直接让后面的 SADD 建出集合
+		return nil
+	}
+
+	vals := make([]any, 0, len(userIds))
+	for _, id := range userIds {
+		vals = append(vals, id)
+	}
+	if _, err := h.redis.SaddCtx(ctx, key, vals...); err != nil {
+		return fmt.Errorf("重建点赞集合 %s: %w", key, err)
+	}
+
+	logx.Infof("从 user_like 重建点赞集合 %s，%d 个成员", key, len(userIds))
+	return nil
+}
+
+// updateCountSet 把变更写进目标的点赞集合。
+// SADD/SREM 都幂等，重投时返回 0、集合状态不变，因此不会重复计数。
+func (h *likeHandler) updateCountSet(ctx context.Context, action int, userId, targetType, targetId uint64) error {
+	key := constant.LikeSetKey(targetType, targetId)
+
+	var err error
+	if action == actionLike {
+		_, err = h.redis.SaddCtx(ctx, key, userId)
+	} else {
+		_, err = h.redis.SremCtx(ctx, key, userId)
+	}
+	if err != nil {
+		return fmt.Errorf("更新点赞集合 %s: %w", key, err)
+	}
+	return nil
 }
 
 // encodeItem 把一条变更编码成消息体 "动作:用户:目标类型:目标id"

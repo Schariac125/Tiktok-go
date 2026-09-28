@@ -49,6 +49,6 @@ func (l *FeedVideoLogic) FeedVideo(in *video.FeedVideoReq) (*video.FeedVideoResp
 
 	return &video.FeedVideoResp{
 		Base: toStatus(errno.OK),
-		Data: &video.VideoFeedData{Items: convertVideos(list)},
+		Data: &video.VideoFeedData{Items: convertVideos(l.ctx, l.svcCtx.Redis, list)},
 	}, nil
 }

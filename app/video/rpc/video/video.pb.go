@@ -1065,28 +1065,28 @@ func (x *BatchGetVideoResp) GetItems() []*Video {
 	return nil
 }
 
-type IncrLikeCountReq struct {
+type SetLikeCountReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	VideoId       int64                  `protobuf:"varint,1,opt,name=video_id,json=videoId,proto3" json:"video_id,omitempty"` // 视频 id
-	Delta         int64                  `protobuf:"varint,2,opt,name=delta,proto3" json:"delta,omitempty"`                    // 增量，可正可负
+	Count         int64                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`                    // 点赞数绝对值
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *IncrLikeCountReq) Reset() {
-	*x = IncrLikeCountReq{}
+func (x *SetLikeCountReq) Reset() {
+	*x = SetLikeCountReq{}
 	mi := &file_api_video_video_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *IncrLikeCountReq) String() string {
+func (x *SetLikeCountReq) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*IncrLikeCountReq) ProtoMessage() {}
+func (*SetLikeCountReq) ProtoMessage() {}
 
-func (x *IncrLikeCountReq) ProtoReflect() protoreflect.Message {
+func (x *SetLikeCountReq) ProtoReflect() protoreflect.Message {
 	mi := &file_api_video_video_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1098,46 +1098,46 @@ func (x *IncrLikeCountReq) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use IncrLikeCountReq.ProtoReflect.Descriptor instead.
-func (*IncrLikeCountReq) Descriptor() ([]byte, []int) {
+// Deprecated: Use SetLikeCountReq.ProtoReflect.Descriptor instead.
+func (*SetLikeCountReq) Descriptor() ([]byte, []int) {
 	return file_api_video_video_proto_rawDescGZIP(), []int{18}
 }
 
-func (x *IncrLikeCountReq) GetVideoId() int64 {
+func (x *SetLikeCountReq) GetVideoId() int64 {
 	if x != nil {
 		return x.VideoId
 	}
 	return 0
 }
 
-func (x *IncrLikeCountReq) GetDelta() int64 {
+func (x *SetLikeCountReq) GetCount() int64 {
 	if x != nil {
-		return x.Delta
+		return x.Count
 	}
 	return 0
 }
 
-type IncrLikeCountResp struct {
+type SetLikeCountResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Base          *Status                `protobuf:"bytes,1,opt,name=base,proto3" json:"base,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *IncrLikeCountResp) Reset() {
-	*x = IncrLikeCountResp{}
+func (x *SetLikeCountResp) Reset() {
+	*x = SetLikeCountResp{}
 	mi := &file_api_video_video_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *IncrLikeCountResp) String() string {
+func (x *SetLikeCountResp) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*IncrLikeCountResp) ProtoMessage() {}
+func (*SetLikeCountResp) ProtoMessage() {}
 
-func (x *IncrLikeCountResp) ProtoReflect() protoreflect.Message {
+func (x *SetLikeCountResp) ProtoReflect() protoreflect.Message {
 	mi := &file_api_video_video_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1149,12 +1149,12 @@ func (x *IncrLikeCountResp) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use IncrLikeCountResp.ProtoReflect.Descriptor instead.
-func (*IncrLikeCountResp) Descriptor() ([]byte, []int) {
+// Deprecated: Use SetLikeCountResp.ProtoReflect.Descriptor instead.
+func (*SetLikeCountResp) Descriptor() ([]byte, []int) {
 	return file_api_video_video_proto_rawDescGZIP(), []int{19}
 }
 
-func (x *IncrLikeCountResp) GetBase() *Status {
+func (x *SetLikeCountResp) GetBase() *Status {
 	if x != nil {
 		return x.Base
 	}
@@ -1333,17 +1333,17 @@ const file_api_video_video_proto_rawDesc = "" +
 	"\x03ids\x18\x01 \x03(\x03R\x03ids\"Z\n" +
 	"\x11BatchGetVideoResp\x12!\n" +
 	"\x04base\x18\x01 \x01(\v2\r.video.StatusR\x04base\x12\"\n" +
-	"\x05items\x18\x02 \x03(\v2\f.video.VideoR\x05items\"C\n" +
-	"\x10IncrLikeCountReq\x12\x19\n" +
+	"\x05items\x18\x02 \x03(\v2\f.video.VideoR\x05items\"B\n" +
+	"\x0fSetLikeCountReq\x12\x19\n" +
 	"\bvideo_id\x18\x01 \x01(\x03R\avideoId\x12\x14\n" +
-	"\x05delta\x18\x02 \x01(\x03R\x05delta\"6\n" +
-	"\x11IncrLikeCountResp\x12!\n" +
+	"\x05count\x18\x02 \x01(\x03R\x05count\"5\n" +
+	"\x10SetLikeCountResp\x12!\n" +
 	"\x04base\x18\x01 \x01(\v2\r.video.StatusR\x04base\"F\n" +
 	"\x13IncrCommentCountReq\x12\x19\n" +
 	"\bvideo_id\x18\x01 \x01(\x03R\avideoId\x12\x14\n" +
 	"\x05delta\x18\x02 \x01(\x03R\x05delta\"9\n" +
 	"\x14IncrCommentCountResp\x12!\n" +
-	"\x04base\x18\x01 \x01(\v2\r.video.StatusR\x04base2\xd1\x04\n" +
+	"\x04base\x18\x01 \x01(\v2\r.video.StatusR\x04base2\xce\x04\n" +
 	"\fVideoService\x12?\n" +
 	"\fPublishVideo\x12\x16.video.PublishVideoReq\x1a\x17.video.PublishVideoResp\x12<\n" +
 	"\vDeleteVideo\x12\x15.video.DeleteVideoReq\x1a\x16.video.DeleteVideoResp\x126\n" +
@@ -1351,8 +1351,8 @@ const file_api_video_video_proto_rawDesc = "" +
 	"\tFeedVideo\x12\x13.video.FeedVideoReq\x1a\x14.video.FeedVideoResp\x12?\n" +
 	"\fPopularVideo\x12\x16.video.PopularVideoReq\x1a\x17.video.PopularVideoResp\x12<\n" +
 	"\vSearchVideo\x12\x15.video.SearchVideoReq\x1a\x16.video.SearchVideoResp\x12B\n" +
-	"\rBatchGetVideo\x12\x17.video.BatchGetVideoReq\x1a\x18.video.BatchGetVideoResp\x12B\n" +
-	"\rIncrLikeCount\x12\x17.video.IncrLikeCountReq\x1a\x18.video.IncrLikeCountResp\x12K\n" +
+	"\rBatchGetVideo\x12\x17.video.BatchGetVideoReq\x1a\x18.video.BatchGetVideoResp\x12?\n" +
+	"\fSetLikeCount\x12\x16.video.SetLikeCountReq\x1a\x17.video.SetLikeCountResp\x12K\n" +
 	"\x10IncrCommentCount\x12\x1a.video.IncrCommentCountReq\x1a\x1b.video.IncrCommentCountRespB\tZ\a./videob\x06proto3"
 
 var (
@@ -1387,8 +1387,8 @@ var file_api_video_video_proto_goTypes = []any{
 	(*SearchVideoResp)(nil),      // 15: video.SearchVideoResp
 	(*BatchGetVideoReq)(nil),     // 16: video.BatchGetVideoReq
 	(*BatchGetVideoResp)(nil),    // 17: video.BatchGetVideoResp
-	(*IncrLikeCountReq)(nil),     // 18: video.IncrLikeCountReq
-	(*IncrLikeCountResp)(nil),    // 19: video.IncrLikeCountResp
+	(*SetLikeCountReq)(nil),      // 18: video.SetLikeCountReq
+	(*SetLikeCountResp)(nil),     // 19: video.SetLikeCountResp
 	(*IncrCommentCountReq)(nil),  // 20: video.IncrCommentCountReq
 	(*IncrCommentCountResp)(nil), // 21: video.IncrCommentCountResp
 }
@@ -1407,7 +1407,7 @@ var file_api_video_video_proto_depIdxs = []int32{
 	2,  // 11: video.SearchVideoResp.data:type_name -> video.VideoPageData
 	0,  // 12: video.BatchGetVideoResp.base:type_name -> video.Status
 	1,  // 13: video.BatchGetVideoResp.items:type_name -> video.Video
-	0,  // 14: video.IncrLikeCountResp.base:type_name -> video.Status
+	0,  // 14: video.SetLikeCountResp.base:type_name -> video.Status
 	0,  // 15: video.IncrCommentCountResp.base:type_name -> video.Status
 	4,  // 16: video.VideoService.PublishVideo:input_type -> video.PublishVideoReq
 	6,  // 17: video.VideoService.DeleteVideo:input_type -> video.DeleteVideoReq
@@ -1416,7 +1416,7 @@ var file_api_video_video_proto_depIdxs = []int32{
 	12, // 20: video.VideoService.PopularVideo:input_type -> video.PopularVideoReq
 	14, // 21: video.VideoService.SearchVideo:input_type -> video.SearchVideoReq
 	16, // 22: video.VideoService.BatchGetVideo:input_type -> video.BatchGetVideoReq
-	18, // 23: video.VideoService.IncrLikeCount:input_type -> video.IncrLikeCountReq
+	18, // 23: video.VideoService.SetLikeCount:input_type -> video.SetLikeCountReq
 	20, // 24: video.VideoService.IncrCommentCount:input_type -> video.IncrCommentCountReq
 	5,  // 25: video.VideoService.PublishVideo:output_type -> video.PublishVideoResp
 	7,  // 26: video.VideoService.DeleteVideo:output_type -> video.DeleteVideoResp
@@ -1425,7 +1425,7 @@ var file_api_video_video_proto_depIdxs = []int32{
 	13, // 29: video.VideoService.PopularVideo:output_type -> video.PopularVideoResp
 	15, // 30: video.VideoService.SearchVideo:output_type -> video.SearchVideoResp
 	17, // 31: video.VideoService.BatchGetVideo:output_type -> video.BatchGetVideoResp
-	19, // 32: video.VideoService.IncrLikeCount:output_type -> video.IncrLikeCountResp
+	19, // 32: video.VideoService.SetLikeCount:output_type -> video.SetLikeCountResp
 	21, // 33: video.VideoService.IncrCommentCount:output_type -> video.IncrCommentCountResp
 	25, // [25:34] is the sub-list for method output_type
 	16, // [16:25] is the sub-list for method input_type

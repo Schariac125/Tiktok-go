@@ -22,8 +22,6 @@ type (
 	FeedVideoResp        = video.FeedVideoResp
 	IncrCommentCountReq  = video.IncrCommentCountReq
 	IncrCommentCountResp = video.IncrCommentCountResp
-	IncrLikeCountReq     = video.IncrLikeCountReq
-	IncrLikeCountResp    = video.IncrLikeCountResp
 	ListVideoReq         = video.ListVideoReq
 	ListVideoResp        = video.ListVideoResp
 	PopularVideoReq      = video.PopularVideoReq
@@ -32,6 +30,8 @@ type (
 	PublishVideoResp     = video.PublishVideoResp
 	SearchVideoReq       = video.SearchVideoReq
 	SearchVideoResp      = video.SearchVideoResp
+	SetLikeCountReq      = video.SetLikeCountReq
+	SetLikeCountResp     = video.SetLikeCountResp
 	Status               = video.Status
 	Video                = video.Video
 	VideoFeedData        = video.VideoFeedData
@@ -52,8 +52,8 @@ type (
 		SearchVideo(ctx context.Context, in *SearchVideoReq, opts ...grpc.CallOption) (*SearchVideoResp, error)
 		// 按 id 批量查视频，供互动服务组装点赞列表
 		BatchGetVideo(ctx context.Context, in *BatchGetVideoReq, opts ...grpc.CallOption) (*BatchGetVideoResp, error)
-		// 增减视频点赞数，供互动服务把点赞结果同步回数据库
-		IncrLikeCount(ctx context.Context, in *IncrLikeCountReq, opts ...grpc.CallOption) (*IncrLikeCountResp, error)
+		// 设置视频点赞数（绝对值），供互动服务的物化任务把 Redis 计数写回数据库。
+		SetLikeCount(ctx context.Context, in *SetLikeCountReq, opts ...grpc.CallOption) (*SetLikeCountResp, error)
 		// 增减视频评论数，供互动服务在发表/删除评论时维护
 		IncrCommentCount(ctx context.Context, in *IncrCommentCountReq, opts ...grpc.CallOption) (*IncrCommentCountResp, error)
 	}
@@ -111,10 +111,10 @@ func (m *defaultVideoService) BatchGetVideo(ctx context.Context, in *BatchGetVid
 	return client.BatchGetVideo(ctx, in, opts...)
 }
 
-// 增减视频点赞数，供互动服务把点赞结果同步回数据库
-func (m *defaultVideoService) IncrLikeCount(ctx context.Context, in *IncrLikeCountReq, opts ...grpc.CallOption) (*IncrLikeCountResp, error) {
+// 设置视频点赞数（绝对值），供互动服务的物化任务把 Redis 计数写回数据库。
+func (m *defaultVideoService) SetLikeCount(ctx context.Context, in *SetLikeCountReq, opts ...grpc.CallOption) (*SetLikeCountResp, error) {
 	client := video.NewVideoServiceClient(m.cli.Conn())
-	return client.IncrLikeCount(ctx, in, opts...)
+	return client.SetLikeCount(ctx, in, opts...)
 }
 
 // 增减视频评论数，供互动服务在发表/删除评论时维护

@@ -26,7 +26,7 @@ const (
 	VideoService_PopularVideo_FullMethodName     = "/video.VideoService/PopularVideo"
 	VideoService_SearchVideo_FullMethodName      = "/video.VideoService/SearchVideo"
 	VideoService_BatchGetVideo_FullMethodName    = "/video.VideoService/BatchGetVideo"
-	VideoService_IncrLikeCount_FullMethodName    = "/video.VideoService/IncrLikeCount"
+	VideoService_SetLikeCount_FullMethodName     = "/video.VideoService/SetLikeCount"
 	VideoService_IncrCommentCount_FullMethodName = "/video.VideoService/IncrCommentCount"
 )
 
@@ -48,8 +48,9 @@ type VideoServiceClient interface {
 	SearchVideo(ctx context.Context, in *SearchVideoReq, opts ...grpc.CallOption) (*SearchVideoResp, error)
 	// 按 id 批量查视频，供互动服务组装点赞列表
 	BatchGetVideo(ctx context.Context, in *BatchGetVideoReq, opts ...grpc.CallOption) (*BatchGetVideoResp, error)
-	// 增减视频点赞数，供互动服务把点赞结果同步回数据库
-	IncrLikeCount(ctx context.Context, in *IncrLikeCountReq, opts ...grpc.CallOption) (*IncrLikeCountResp, error)
+	// 设置视频点赞数（绝对值），供互动服务的物化任务把 Redis 计数写回数据库。
+	// 点赞数的权威来源是 Redis，这一列只是定期物化出来的副本。
+	SetLikeCount(ctx context.Context, in *SetLikeCountReq, opts ...grpc.CallOption) (*SetLikeCountResp, error)
 	// 增减视频评论数，供互动服务在发表/删除评论时维护
 	IncrCommentCount(ctx context.Context, in *IncrCommentCountReq, opts ...grpc.CallOption) (*IncrCommentCountResp, error)
 }
@@ -132,10 +133,10 @@ func (c *videoServiceClient) BatchGetVideo(ctx context.Context, in *BatchGetVide
 	return out, nil
 }
 
-func (c *videoServiceClient) IncrLikeCount(ctx context.Context, in *IncrLikeCountReq, opts ...grpc.CallOption) (*IncrLikeCountResp, error) {
+func (c *videoServiceClient) SetLikeCount(ctx context.Context, in *SetLikeCountReq, opts ...grpc.CallOption) (*SetLikeCountResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(IncrLikeCountResp)
-	err := c.cc.Invoke(ctx, VideoService_IncrLikeCount_FullMethodName, in, out, cOpts...)
+	out := new(SetLikeCountResp)
+	err := c.cc.Invoke(ctx, VideoService_SetLikeCount_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -170,8 +171,9 @@ type VideoServiceServer interface {
 	SearchVideo(context.Context, *SearchVideoReq) (*SearchVideoResp, error)
 	// 按 id 批量查视频，供互动服务组装点赞列表
 	BatchGetVideo(context.Context, *BatchGetVideoReq) (*BatchGetVideoResp, error)
-	// 增减视频点赞数，供互动服务把点赞结果同步回数据库
-	IncrLikeCount(context.Context, *IncrLikeCountReq) (*IncrLikeCountResp, error)
+	// 设置视频点赞数（绝对值），供互动服务的物化任务把 Redis 计数写回数据库。
+	// 点赞数的权威来源是 Redis，这一列只是定期物化出来的副本。
+	SetLikeCount(context.Context, *SetLikeCountReq) (*SetLikeCountResp, error)
 	// 增减视频评论数，供互动服务在发表/删除评论时维护
 	IncrCommentCount(context.Context, *IncrCommentCountReq) (*IncrCommentCountResp, error)
 	mustEmbedUnimplementedVideoServiceServer()
@@ -205,8 +207,8 @@ func (UnimplementedVideoServiceServer) SearchVideo(context.Context, *SearchVideo
 func (UnimplementedVideoServiceServer) BatchGetVideo(context.Context, *BatchGetVideoReq) (*BatchGetVideoResp, error) {
 	return nil, status.Error(codes.Unimplemented, "method BatchGetVideo not implemented")
 }
-func (UnimplementedVideoServiceServer) IncrLikeCount(context.Context, *IncrLikeCountReq) (*IncrLikeCountResp, error) {
-	return nil, status.Error(codes.Unimplemented, "method IncrLikeCount not implemented")
+func (UnimplementedVideoServiceServer) SetLikeCount(context.Context, *SetLikeCountReq) (*SetLikeCountResp, error) {
+	return nil, status.Error(codes.Unimplemented, "method SetLikeCount not implemented")
 }
 func (UnimplementedVideoServiceServer) IncrCommentCount(context.Context, *IncrCommentCountReq) (*IncrCommentCountResp, error) {
 	return nil, status.Error(codes.Unimplemented, "method IncrCommentCount not implemented")
@@ -358,20 +360,20 @@ func _VideoService_BatchGetVideo_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _VideoService_IncrLikeCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(IncrLikeCountReq)
+func _VideoService_SetLikeCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetLikeCountReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(VideoServiceServer).IncrLikeCount(ctx, in)
+		return srv.(VideoServiceServer).SetLikeCount(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: VideoService_IncrLikeCount_FullMethodName,
+		FullMethod: VideoService_SetLikeCount_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VideoServiceServer).IncrLikeCount(ctx, req.(*IncrLikeCountReq))
+		return srv.(VideoServiceServer).SetLikeCount(ctx, req.(*SetLikeCountReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -430,8 +432,8 @@ var VideoService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _VideoService_BatchGetVideo_Handler,
 		},
 		{
-			MethodName: "IncrLikeCount",
-			Handler:    _VideoService_IncrLikeCount_Handler,
+			MethodName: "SetLikeCount",
+			Handler:    _VideoService_SetLikeCount_Handler,
 		},
 		{
 			MethodName: "IncrCommentCount",

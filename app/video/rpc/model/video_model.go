@@ -35,8 +35,8 @@ type (
 		CountSearch(ctx context.Context, q SearchQuery) (int64, error)
 		// FindByIds 按 id 批量查询未删除的视频，供互动服务组装点赞列表。
 		FindByIds(ctx context.Context, ids []uint64) ([]*Video, error)
-		// IncrLikeCount 增减点赞数，不会减到 0 以下。
-		IncrLikeCount(ctx context.Context, id uint64, delta int64) error
+		// SetLikeCount 把点赞数设为绝对值，供互动服务的物化任务写回。
+		SetLikeCount(ctx context.Context, id uint64, count int64) error
 		// IncrCommentCount 增减评论数，不会减到 0 以下。
 		IncrCommentCount(ctx context.Context, id uint64, delta int64) error
 	}
@@ -210,11 +210,13 @@ func (m *customVideoModel) FindByIds(ctx context.Context, ids []uint64) ([]*Vide
 	return list, nil
 }
 
-// IncrLikeCount 增减点赞数。列是 UNSIGNED，直接做减法可能越界报错，
-// 所以先转成有符号相加再取 0 兜底。
-func (m *customVideoModel) IncrLikeCount(ctx context.Context, id uint64, delta int64) error {
-	query := fmt.Sprintf("update %s set `like_count` = greatest(cast(`like_count` as signed) + ?, 0) where `id` = ?", m.table)
-	_, err := m.ExecNoCacheCtx(ctx, query, delta, id)
+// SetLikeCount 把点赞数设为绝对值。
+//
+// 点赞数的权威来源是 Redis 的点赞集合，这一列只是互动服务定期物化出来的副本，
+// 所以只能整体覆盖，不能做增量——增量会在「副本比 Redis 旧」时越算越偏。
+func (m *customVideoModel) SetLikeCount(ctx context.Context, id uint64, count int64) error {
+	query := fmt.Sprintf("update %s set `like_count` = ? where `id` = ?", m.table)
+	_, err := m.ExecNoCacheCtx(ctx, query, count, id)
 	return err
 }
 

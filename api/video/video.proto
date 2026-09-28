@@ -127,12 +127,12 @@ message BatchGetVideoResp {
   repeated Video items = 2; // 只返回存在且未删除的
 }
 
-message IncrLikeCountReq {
+message SetLikeCountReq {
   int64 video_id = 1; // 视频 id
-  int64 delta = 2;    // 增量，可正可负
+  int64 count = 2;    // 点赞数绝对值
 }
 
-message IncrLikeCountResp {
+message SetLikeCountResp {
   Status base = 1;
 }
 
@@ -160,8 +160,9 @@ service VideoService {
   rpc SearchVideo(SearchVideoReq) returns (SearchVideoResp);
   // 按 id 批量查视频，供互动服务组装点赞列表
   rpc BatchGetVideo(BatchGetVideoReq) returns (BatchGetVideoResp);
-  // 增减视频点赞数，供互动服务把点赞结果同步回数据库
-  rpc IncrLikeCount(IncrLikeCountReq) returns (IncrLikeCountResp);
+  // 设置视频点赞数（绝对值），供互动服务的物化任务把 Redis 计数写回数据库。
+  // 点赞数的权威来源是 Redis，这一列只是定期物化出来的副本。
+  rpc SetLikeCount(SetLikeCountReq) returns (SetLikeCountResp);
   // 增减视频评论数，供互动服务在发表/删除评论时维护
   rpc IncrCommentCount(IncrCommentCountReq) returns (IncrCommentCountResp);
 }

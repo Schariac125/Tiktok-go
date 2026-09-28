@@ -43,7 +43,7 @@ func (l *PopularVideoLogic) PopularVideo(in *video.PopularVideoReq) (*video.Popu
 
 	return &video.PopularVideoResp{
 		Base: toStatus(errno.OK),
-		Data: &video.VideoFeedData{Items: convertVideos(utils.SlicePage(rank, offset, pageSize))},
+		Data: &video.VideoFeedData{Items: convertVideos(l.ctx, l.svcCtx.Redis, utils.SlicePage(rank, offset, pageSize))},
 	}, nil
 }
 

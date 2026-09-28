@@ -30,8 +30,8 @@ type (
 		FindIdsByVideo(ctx context.Context, videoId uint64) ([]uint64, error)
 		// FindIdsByParent 取某条评论下所有未删除回复的 id。
 		FindIdsByParent(ctx context.Context, parentId uint64) ([]uint64, error)
-		// IncrLikeCount 增减点赞数，不会减到 0 以下。
-		IncrLikeCount(ctx context.Context, id uint64, delta int64) error
+		// SetLikeCount 把点赞数设为绝对值，供物化任务写回。
+		SetLikeCount(ctx context.Context, id uint64, count int64) error
 		// IncrChildCount 增减子评论数，不会减到 0 以下。
 		IncrChildCount(ctx context.Context, id uint64, delta int64) error
 	}
@@ -141,11 +141,13 @@ func (m *customCommentModel) FindIdsByParent(ctx context.Context, parentId uint6
 	return ids, nil
 }
 
-// IncrLikeCount 增减点赞数。列是 UNSIGNED，直接做减法可能越界报错，
-// 所以先转成有符号相加再取 0 兜底。
-func (m *customCommentModel) IncrLikeCount(ctx context.Context, id uint64, delta int64) error {
-	query := fmt.Sprintf("update %s set `like_count` = greatest(cast(`like_count` as signed) + ?, 0) where `id` = ?", m.table)
-	_, err := m.ExecNoCacheCtx(ctx, query, delta, id)
+// SetLikeCount 把点赞数设为绝对值。
+//
+// 点赞数的权威来源是 Redis 的点赞集合，这一列只是物化出来的副本，
+// 只能整体覆盖，不能做增量——增量会在「副本比 Redis 旧」时越算越偏。
+func (m *customCommentModel) SetLikeCount(ctx context.Context, id uint64, count int64) error {
+	query := fmt.Sprintf("update %s set `like_count` = ? where `id` = ?", m.table)
+	_, err := m.ExecNoCacheCtx(ctx, query, count, id)
 	return err
 }
 

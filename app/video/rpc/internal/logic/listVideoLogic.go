@@ -43,7 +43,7 @@ func (l *ListVideoLogic) ListVideo(in *video.ListVideoReq) (*video.ListVideoResp
 	if total == 0 {
 		return &video.ListVideoResp{
 			Base: toStatus(errno.OK),
-			Data: &video.VideoPageData{Items: convertVideos(nil)},
+			Data: &video.VideoPageData{Items: convertVideos(l.ctx, l.svcCtx.Redis, nil)},
 		}, nil
 	}
 
@@ -59,7 +59,7 @@ func (l *ListVideoLogic) ListVideo(in *video.ListVideoReq) (*video.ListVideoResp
 	return &video.ListVideoResp{
 		Base: toStatus(errno.OK),
 		Data: &video.VideoPageData{
-			Items: convertVideos(list),
+			Items: convertVideos(l.ctx, l.svcCtx.Redis, list),
 			Total: total,
 		},
 	}, nil

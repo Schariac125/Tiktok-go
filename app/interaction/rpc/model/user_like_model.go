@@ -25,6 +25,9 @@ type (
 		FindVideoIdsByUser(ctx context.Context, userId uint64, offset, limit int64) ([]uint64, error)
 		// CountByUser 统计某个用户对某类目标的点赞总数。
 		CountByUser(ctx context.Context, userId, targetType uint64) (int64, error)
+		// FindUserIdsByTarget 取某个目标下所有点赞用户 id。
+		// 用于 Redis 点赞集合丢失时从数据库重建，集合是这张表的投影。
+		FindUserIdsByTarget(ctx context.Context, targetType, targetId uint64) ([]uint64, error)
 		// DeleteByTarget 清理某个目标（视频或评论）下的所有点赞，返回删除条数。
 		DeleteByTarget(ctx context.Context, targetType, targetId uint64) (int64, error)
 		// DeleteByTargets 批量清理多个目标下的点赞（如视频被删时清理它所有评论的点赞）。
@@ -95,6 +98,25 @@ func (m *customUserLikeModel) CountByUser(ctx context.Context, userId, targetTyp
 		return 0, err
 	}
 	return row.Total, nil
+}
+
+// FindUserIdsByTarget 取某个目标下所有点赞用户 id。
+// 走 idx_target (target_type, target_id)，不会全表扫。
+func (m *customUserLikeModel) FindUserIdsByTarget(ctx context.Context, targetType, targetId uint64) ([]uint64, error) {
+	query := fmt.Sprintf("select `user_id` from %s where `target_type` = ? and `target_id` = ?", m.table)
+
+	var rows []struct {
+		UserId uint64 `db:"user_id"`
+	}
+	if err := m.QueryRowsNoCacheCtx(ctx, &rows, query, targetType, targetId); err != nil {
+		return nil, err
+	}
+
+	ids := make([]uint64, 0, len(rows))
+	for _, r := range rows {
+		ids = append(ids, r.UserId)
+	}
+	return ids, nil
 }
 
 // DeleteByTarget 清理某个目标下的所有点赞（目标被删除时调用）。

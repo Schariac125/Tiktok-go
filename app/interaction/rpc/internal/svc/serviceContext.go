@@ -49,16 +49,18 @@ func NewServiceContext(ctx context.Context, c config.Config) *ServiceContext {
 	}
 
 	// 未配置 MQ 时不建客户端，点赞会因队列不可用而失败。
-	// 配置了却连不上则直接启动失败——带着坏掉的队列跑起来，故障会推迟到
-	// 用户点赞时才暴露，且接口还返回成功。
+	// 配了 MQ 却没配 Redis 是配置错误：点赞集合是计数的权威来源，没有它整条
+	// 链路算不出计数。这种情况直接启动失败，而不是等用户点赞时才发现。
 	if len(c.RocketMQ.NameServer) > 0 {
+		if svcCtx.Redis == nil {
+			panic("配置了 RocketMQ 但未配置 CacheRedis：点赞计数依赖 Redis 的点赞集合")
+		}
 		svcCtx.startLikeQueue(ctx, c.RocketMQ.NameServer, userLikeModel, commentModel, videoRpc)
 	}
 	return svcCtx
 }
 
-// startLikeQueue 建起点赞队列的生产者与消费者。
-// 生产者与消费者是两个独立对象，各自持有到 broker 的连接。
+// startLikeQueue 建起点赞队列的生产者、消费者，以及计数的物化任务。
 func (s *ServiceContext) startLikeQueue(ctx context.Context, nameServer []string,
 	likes model.UserLikeModel, comments model.CommentModel, videos videoservice.VideoService) {
 
@@ -76,10 +78,13 @@ func (s *ServiceContext) startLikeQueue(ctx context.Context, nameServer []string
 	if err != nil {
 		panic(fmt.Errorf("初始化点赞队列消费者失败: %w", err))
 	}
-	if err := sub.Subscribe(ctx, constant.LikeTopic,
-		task.NewLikeHandler(likes, comments, videos)); err != nil {
+	// 消费端只做两件事：落 user_like、维护 Redis 点赞集合。
+	// 计数的写回交给了物化任务，所以要单独拿 comment/video 客户端。
+	if err := sub.Subscribe(ctx, constant.LikeTopic, task.NewLikeHandler(s.Redis, likes)); err != nil {
 		panic(fmt.Errorf("订阅点赞队列失败: %w", err))
 	}
+
+	task.NewMaterializer(s.Redis, comments, videos).Start(ctx)
 
 	s.LikePublisher = pub
 	s.likeSubscriber = sub
