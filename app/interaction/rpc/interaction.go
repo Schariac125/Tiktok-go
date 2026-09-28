@@ -24,12 +24,15 @@ func main() {
 
 	var c config.Config
 	env.MustLoad(*configFile, &c)
-	svcCtx := svc.NewServiceContext(c)
 
-	// 点赞的落库任务随进程启停：接口只写队列，由它按周期刷进数据库
+	// 点赞落库的消费端随进程启停：接口只投递消息，由它异步刷进数据库。
+	// ctx 先建，传给 ServiceContext 用于订阅；退出时 cancel 停掉消费，
+	// Close 把消费进度同步回 broker。
 	appCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	svcCtx.LikeWorker.Start(appCtx)
+
+	svcCtx := svc.NewServiceContext(appCtx, c)
+	defer svcCtx.Close()
 
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
 		interaction.RegisterInteractionServiceServer(grpcServer, server.NewInteractionServiceServer(svcCtx))

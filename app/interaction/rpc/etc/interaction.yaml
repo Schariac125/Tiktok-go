@@ -8,10 +8,15 @@ Etcd:
 MySQL:
   DataSource: root:${MYSQL_ROOT_PASSWORD}@tcp(127.0.0.1:13306)/tiktok?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
 
-# model 缓存；点赞队列也走这个 redis
+# model 的单条记录缓存
 CacheRedis:
   - Host: 127.0.0.1:6379
     Type: node
+
+# 点赞落库队列。broker 地址由 NameServer 下发，不在这里配
+RocketMQ:
+  NameServer:
+    - 127.0.0.1:9876
 
 # 组装点赞列表时要读视频信息
 VideoRpc:

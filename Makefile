@@ -37,6 +37,7 @@ BIN_DIR     := bin
 .PHONY: generate api-build rpc-build model-build build \
         image-build \
         infra-up infra-down infra-logs \
+        rocketmq-hosts rocketmq-check \
         run-gateway clean
 
 # 生成全部代码：网关 + 各模块 rpc
@@ -94,13 +95,36 @@ image-build:
 	@echo ">>> 构建 gateway 镜像"
 	@docker build -f app/gateway/api/Dockerfile -t tiktok-go/gateway:latest .
 
-# 启动依赖中间件（etcd、mysql、redis），配置见 docker-compose.yml。
-# 三个数据卷由外部持有（compose 里标了 external），先建好再起容器，已存在时是空操作。
+# 启动依赖中间件（etcd、mysql、redis、rocketmq），配置见 docker-compose.yml。
+# 四个数据卷由外部持有（compose 里标了 external），先建好再起容器，已存在时是空操作。
 infra-up:
 	@docker volume create mysql_data >/dev/null
 	@docker volume create redis_data >/dev/null
 	@docker volume create etcd_data >/dev/null
+	@docker volume create rocketmq_store >/dev/null
 	docker compose up -d
+
+# 让宿主机也能解析 host.docker.internal，指向 127.0.0.1。
+#
+# RocketMQ 的 broker 只注册一个对外地址，而宿主机与容器到达它的地址不同：
+# 宿主机走 127.0.0.1 的 published 端口，容器走 host.docker.internal 网关。
+# 注册域名 host.docker.internal 后，两边各自解析到能通的地址。
+# 容器侧由 Docker Desktop 提供，宿主机侧要这一行——需要 sudo，故不放进 infra-up。
+rocketmq-hosts:
+	@grep -q "host.docker.internal" /etc/hosts \
+		&& echo "已存在，跳过" \
+		|| echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
+
+# 查看 broker 注册到 NameServer 的地址；客户端连不上时先看这里。
+#
+# 在独立的临时容器里跑，不在 broker 容器内跑：broker 注册的是
+# host.docker.internal，从它自己容器里连这个地址会绕回宿主机的 published
+# 端口再 DNAT 回自身，形成 hairpin 而失败——真实客户端（interaction-rpc）
+# 是第三方，不受影响，所以这里也用一个第三方容器来模拟。
+rocketmq-check:
+	@docker run --rm --network tiktok-go_default --entrypoint /bin/bash apache/rocketmq:4.9.7 \
+		-c 'ROCKETMQ_BIN=$$(echo /home/rocketmq/rocketmq-*/bin); \
+		    sh $$ROCKETMQ_BIN/mqadmin clusterList -n rocketmq-namesrv:9876'
 
 # 停止中间件，数据卷保留
 infra-down:

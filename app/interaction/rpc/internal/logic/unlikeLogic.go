@@ -26,7 +26,7 @@ func NewUnlikeLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UnlikeLogi
 }
 
 // 取消点赞 DELETE /like/delete
-// 与点赞同样走队列；落库时是硬删除，不留记录。
+// 与点赞同样投递消息；落库时是硬删除，不留记录。
 func (l *UnlikeLogic) Unlike(in *interaction.UnlikeReq) (*interaction.UnlikeResp, error) {
 	if in.UserId <= 0 {
 		return &interaction.UnlikeResp{Base: toStatus(errno.ErrInvalidParam)}, nil
@@ -37,8 +37,8 @@ func (l *UnlikeLogic) Unlike(in *interaction.UnlikeReq) (*interaction.UnlikeResp
 		return &interaction.UnlikeResp{Base: toStatus(e)}, nil
 	}
 
-	if err := task.PushUnlike(l.ctx, l.svcCtx.LikeWorker, uint64(in.UserId), targetType, targetId); err != nil {
-		l.Errorf("写入取消点赞队列失败: %v", err)
+	if err := task.PushUnlike(l.ctx, l.svcCtx.LikePublisher, uint64(in.UserId), targetType, targetId); err != nil {
+		l.Errorf("投递取消点赞消息失败: %v", err)
 		return &interaction.UnlikeResp{Base: toStatus(errno.ErrInternal)}, nil
 	}
 

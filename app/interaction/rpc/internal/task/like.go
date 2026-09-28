@@ -1,7 +1,7 @@
-// Package task 组装互动模块自己的队列消费任务。
+// Package task 组装互动模块自己的队列消费逻辑。
 //
-// 队列的批量取用与周期调度由 pkg/task 提供，这里只负责点赞特有的部分：
-// 队列项的格式、幂等落库、以及按目标类型更新计数。
+// 队列的投递与消费由 pkg/mq 提供（当前实现是 RocketMQ），这里只负责点赞特有的
+// 部分：队列项的格式、顺序键的取法、幂等落库、以及按目标类型更新计数。
 package task
 
 import (
@@ -15,12 +15,14 @@ import (
 	"tiktok-go/app/video/rpc/video"
 	"tiktok-go/app/video/rpc/videoservice"
 	"tiktok-go/pkg/constant"
-	gopkgtask "tiktok-go/pkg/task"
 	"tiktok-go/pkg/errno"
+	"tiktok-go/pkg/mq"
 
 	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/core/stores/redis"
 )
+
+// ErrUnavailable 队列不可用（未配置 MQ），调用方据此决定是报错还是降级
+var ErrUnavailable = errors.New("队列不可用")
 
 // 队列里的动作码
 const (
@@ -35,37 +37,53 @@ type likeHandler struct {
 	videos   videoservice.VideoService
 }
 
-// NewLikeWorker 组装点赞队列的消费任务。
-// 点赞是高频操作，接口只写队列就返回，由这个任务按周期刷进数据库并更新计数。
-func NewLikeWorker(r *redis.Redis, likes model.UserLikeModel, comments model.CommentModel, videos videoservice.VideoService) *gopkgtask.Worker {
+// NewLikeHandler 构造点赞变更的消费逻辑。
+// 点赞是高频操作，接口只投递消息就返回，由这个 handler 异步刷进数据库并更新计数。
+func NewLikeHandler(likes model.UserLikeModel, comments model.CommentModel, videos videoservice.VideoService) mq.Handler {
 	h := &likeHandler{likes: likes, comments: comments, videos: videos}
+	return h.handle
+}
 
-	return gopkgtask.NewWorker(r, gopkgtask.Options{
-		Name:     "点赞",
-		Key:      constant.LikeQueueKey,
-		Batch:    constant.LikeSyncBatch,
-		Interval: constant.LikeSyncInterval,
-		Handler:  h.handle,
+// PushLike 投递一次点赞
+func PushLike(ctx context.Context, p mq.Publisher, userId, targetType, targetId uint64) error {
+	return push(ctx, p, actionLike, userId, targetType, targetId)
+}
+
+// PushUnlike 投递一次取消点赞
+func PushUnlike(ctx context.Context, p mq.Publisher, userId, targetType, targetId uint64) error {
+	return push(ctx, p, actionUnlike, userId, targetType, targetId)
+}
+
+func push(ctx context.Context, p mq.Publisher, action int, userId, targetType, targetId uint64) error {
+	if p == nil {
+		return ErrUnavailable
+	}
+	return p.Publish(ctx, mq.Message{
+		Topic: constant.LikeTopic,
+		Key:   likeKey(userId, targetType, targetId),
+		Body:  []byte(encodeItem(action, userId, targetType, targetId)),
 	})
 }
 
-// PushLike 把一次点赞写进队列
-func PushLike(ctx context.Context, w *gopkgtask.Worker, userId, targetType, targetId uint64) error {
-	return w.Push(ctx, encodeItem(actionLike, userId, targetType, targetId))
-}
-
-// PushUnlike 把一次取消点赞写进队列
-func PushUnlike(ctx context.Context, w *gopkgtask.Worker, userId, targetType, targetId uint64) error {
-	return w.Push(ctx, encodeItem(actionUnlike, userId, targetType, targetId))
+// likeKey 顺序键，取「行的身份」。
+//
+// 只有同一用户对同一目标的连续操作才会互相冲突（先点赞再取消，顺序反了最终
+// 状态就错），不同用户操作的是不同的行。所以键取三者组合而非目标 id——
+// 用目标 id 会让所有用户对同一目标的操作用挤进同一个队列，白白牺牲并行度。
+func likeKey(userId, targetType, targetId uint64) string {
+	return fmt.Sprintf("%d:%d:%d", userId, targetType, targetId)
 }
 
 // handle 落库一条变更，并按幂等结果调整计数。
-// 可能被重复调用（整批重试），因此依赖 InsertIgnore / DeleteOne 的影响行数来判断是否真的变更过。
-func (h *likeHandler) handle(ctx context.Context, item string) error {
-	action, userId, targetType, targetId, err := decodeItem(item)
+//
+// 可能被重复调用：MQ 是 at-least-once，消费失败会重投。因此依赖
+// InsertIgnore / DeleteOne 的影响行数判断是否真的变更过，而不是假设只调用一次。
+func (h *likeHandler) handle(ctx context.Context, body []byte) error {
+	action, userId, targetType, targetId, err := decodeItem(string(body))
 	if err != nil {
-		// 脏数据直接跳过，别卡住整条队列
-		logx.Errorf("跳过无法解析的点赞队列项 %q: %v", item, err)
+		// 解析不了说明是坏数据，重投多少次都不会成功，只会白白占着重试名额
+		// 并阻塞本队列。记一笔后确认掉，不再重试。
+		logx.Errorf("丢弃无法解析的点赞队列消息 %q: %v", body, err)
 		return nil
 	}
 
@@ -113,12 +131,12 @@ func (h *likeHandler) applyCountDelta(ctx context.Context, targetType, targetId 
 	}
 }
 
-// encodeItem 把一条变更编码成队列项 "动作:用户:目标类型:目标id"
+// encodeItem 把一条变更编码成消息体 "动作:用户:目标类型:目标id"
 func encodeItem(action int, userId, targetType, targetId uint64) string {
 	return fmt.Sprintf("%d:%d:%d:%d", action, userId, targetType, targetId)
 }
 
-// decodeItem 解析队列项
+// decodeItem 解析消息体
 func decodeItem(item string) (action int, userId, targetType, targetId uint64, err error) {
 	parts := strings.Split(item, ":")
 	if len(parts) != 4 {

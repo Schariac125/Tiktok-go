@@ -1,4 +1,4 @@
-# tiktok-go 开发环境的三个中间件。
+# tiktok-go 开发环境的中间件。
 #
 # 用法：
 #   docker compose up -d       启动全部
@@ -82,6 +82,74 @@ services:
       timeout: 3s
       retries: 10
 
+  # ---- RocketMQ ----
+  # 点赞队列。NameServer 负责路由，Broker 存消息。
+  #
+  # brokerIP1 是这套东西上 Docker 最容易踩的坑：broker 会把「客户端该连哪个
+  # 地址」注册到 NameServer，而宿主机和容器看到的地址不一样——
+  #   宿主机只能走 127.0.0.1 的 published 端口，容器只能走 host.docker.internal。
+  # 两者没有公共地址，所以这里注册域名 host.docker.internal：
+  #   容器内由 Docker Desktop 解析到网关，宿主机需要在 /etc/hosts 里手动加一行
+  #     127.0.0.1 host.docker.internal
+  # 两边各自解析到能到宿主机的地址，最终都落到同一个 published 端口。
+  # 明文说明见 Makefile 的 rocketmq-hosts 目标。
+  rocketmq-namesrv:
+    image: apache/rocketmq:4.9.7
+    container_name: tiktok-rocketmq-namesrv
+    restart: unless-stopped
+    ports:
+      - "9876:9876"
+    command: sh mqnamesrv
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/9876'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  rocketmq-broker:
+    image: apache/rocketmq:4.9.7
+    container_name: tiktok-rocketmq-broker
+    restart: unless-stopped
+    depends_on:
+      rocketmq-namesrv:
+        condition: service_healthy
+    ports:
+      - "10911:10911" # 客户端连接端口
+      - "10909:10909" # VIP 通道
+      - "10912:10912" # 主从同步（当前单机，预留）
+    environment:
+      # 默认 host.docker.internal，见上方说明；改这里可切到别的运行方式
+      ROCKETMQ_BROKER_IP: ${ROCKETMQ_BROKER_IP:-host.docker.internal}
+      # 镜像默认按机器内存自动推算堆（常见 8g），开发环境给个小值即可。
+      # JAVA_OPT_EXT 拼在自动推算的 -Xms/-Xmx 之后，所以这里的值生效。
+      JAVA_OPT_EXT: "-Xms512m -Xmx512m -Xmn256m"
+    volumes:
+      # 不能挂到 /home/rocketmq/conf：该目录在镜像里不存在，Docker 会以 root
+      # 建出来，而容器以 uid 3000 运行，写不进去。挂到 /etc 下只读，配置在 /tmp 生成。
+      - ./deploy/rocketmq/broker.conf:/etc/rocketmq/broker-base.conf:ro
+      - rocketmq_store:/home/rocketmq/store
+    # 以 root 启动只为两件事：store 卷由 docker 建出来是 root 属主，需要 chown 给
+    # uid 3000；以及写 /tmp 下的配置。做完立刻 su 回 rocketmq 跑 broker，
+    # 不让 Java 进程以 root 运行。
+    user: root
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        cp /etc/rocketmq/broker-base.conf /tmp/broker.conf
+        echo "brokerIP1=$${ROCKETMQ_BROKER_IP}" >> /tmp/broker.conf
+        echo ">>> brokerIP1=$${ROCKETMQ_BROKER_IP}"
+        chmod 644 /tmp/broker.conf
+        chown -R rocketmq:rocketmq /home/rocketmq/store
+        ROCKETMQ_BIN=$(echo /home/rocketmq/rocketmq-*/bin)
+        exec su rocketmq -c "sh $${ROCKETMQ_BIN}/mqbroker -c /tmp/broker.conf -n rocketmq-namesrv:9876"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/10911'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
   # ---- 业务服务 ----
   # 配置从 deploy/ 挂载：容器内中间件地址走 compose 服务名，与本地开发的 etc/*.yaml 不同。
   # rpc 服务不对外暴露端口，只经 etcd 服务发现被网关调用。
@@ -147,6 +215,9 @@ services:
       mysql:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      # 点赞队列走 RocketMQ，broker 没起来这条链路不通
+      rocketmq-broker:
         condition: service_healthy
       video-rpc:
         condition: service_healthy
@@ -228,4 +299,7 @@ volumes:
     external: true
   redis_data:
     name: redis_data
+    external: true
+  rocketmq_store:
+    name: rocketmq_store
     external: true
