@@ -84,7 +84,7 @@ func (s *ServiceContext) startLikeQueue(ctx context.Context, nameServer []string
 		panic(fmt.Errorf("订阅点赞队列失败: %w", err))
 	}
 
-	task.NewMaterializer(s.Redis, comments, videos).Start(ctx)
+	task.NewMaterializer(s.Redis, likes, comments, videos).Start(ctx)
 
 	s.LikePublisher = pub
 	s.likeSubscriber = sub

@@ -98,7 +98,7 @@ func (h *likeHandler) handle(ctx context.Context, body []byte) error {
 	}
 
 	// 2. 计数
-	if err := h.ensureSetLoaded(ctx, targetType, targetId); err != nil {
+	if err := EnsureSetLoaded(ctx, h.redis, h.likes, targetType, targetId); err != nil {
 		return err
 	}
 	if err := h.updateCountSet(ctx, action, userId, targetType, targetId); err != nil {
@@ -116,18 +116,21 @@ func (h *likeHandler) handle(ctx context.Context, body []byte) error {
 	return nil
 }
 
-// ensureSetLoaded 保证集合是完整的。
+// EnsureSetLoaded 保证点赞集合是完整的：key 不存在时从 user_like 重建。
 //
-// 集合可能因为 Redis 数据丢失而整个不见，此时直接 SADD 会让集合只剩这一个成员，
-// 计数从 1 开始而不是真实值。所以发现 key 不存在时先从 user_like 重建——
-// user_like 才是真相，集合只是它的投影。
+// 集合是 user_like 的投影，两者在算法上等价，但 Redis 丢数据时集合会整个不见，
+// 而 user_like 还在。此时 SCARD 返回 0 且**不报错**——那不代表真的没人赞过，
+// 只是集合没了。所以凡是「读计数」或「在计数上做增量」的地方都必须先过这一步，
+// 否则会把 0 当成真值用出去。
 //
-// 注意本函数在落库之后调用，重建出来的集合已经包含本次变更，所以随后的
-// SADD/SREM 会返回 0，这是正常的。
-func (h *likeHandler) ensureSetLoaded(ctx context.Context, targetType, targetId uint64) error {
+// 调用方若刚写过 user_like，重建出来的集合已经包含本次变更，
+// 随后的 SADD/SREM 会返回 0，这是正常的。
+func EnsureSetLoaded(ctx context.Context, r *redis.Redis,
+	likes model.UserLikeModel, targetType, targetId uint64) error {
+
 	key := constant.LikeSetKey(targetType, targetId)
 
-	exists, err := h.redis.ExistsCtx(ctx, key)
+	exists, err := r.ExistsCtx(ctx, key)
 	if err != nil {
 		return fmt.Errorf("检查点赞集合 %s: %w", key, err)
 	}
@@ -135,12 +138,12 @@ func (h *likeHandler) ensureSetLoaded(ctx context.Context, targetType, targetId 
 		return nil
 	}
 
-	userIds, err := h.likes.FindUserIdsByTarget(ctx, targetType, targetId)
+	userIds, err := likes.FindUserIdsByTarget(ctx, targetType, targetId)
 	if err != nil {
 		return fmt.Errorf("重建点赞集合 %s: %w", key, err)
 	}
 	if len(userIds) == 0 {
-		// 目标确实没人赞过，不是丢失，直接让后面的 SADD 建出集合
+		// 目标确实没人赞过，不是丢失，交给调用方去建集合
 		return nil
 	}
 
@@ -148,7 +151,7 @@ func (h *likeHandler) ensureSetLoaded(ctx context.Context, targetType, targetId 
 	for _, id := range userIds {
 		vals = append(vals, id)
 	}
-	if _, err := h.redis.SaddCtx(ctx, key, vals...); err != nil {
+	if _, err := r.SaddCtx(ctx, key, vals...); err != nil {
 		return fmt.Errorf("重建点赞集合 %s: %w", key, err)
 	}
 

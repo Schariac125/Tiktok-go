@@ -69,9 +69,11 @@ func fillLikeCounts(ctx context.Context, r *redis.Redis, items []*video.Video) {
 	}
 
 	counts := make([]*redis.IntCmd, len(items))
+	exists := make([]*redis.IntCmd, len(items))
 	err := r.PipelinedCtx(ctx, func(p redis.Pipeliner) error {
 		for i, v := range items {
 			key := constant.LikeSetKey(constant.LikeTargetVideo, uint64(v.Id))
+			exists[i] = p.Exists(ctx, key)
 			counts[i] = p.SCard(ctx, key)
 		}
 		return nil
@@ -81,10 +83,21 @@ func fillLikeCounts(ctx context.Context, r *redis.Redis, items []*video.Video) {
 		return
 	}
 
-	for i, cmd := range counts {
-		n, err := cmd.Result()
+	for i := range items {
+		// 集合不存在说明 Redis 丢过数据。这时 SCARD 返回 0 且**不报错**，
+		// 但 0 不是真值——直接用会把所有视频的点赞数刷成 0。
+		// 保留数据库里的副本（最多滞后一个物化周期），等这个目标下次被点赞时
+		// 由互动服务的消费端从 user_like 重建集合。
+		//
+		// 注意这个判断无法完全精确：Redis 不允许空集合存在，所以「刚好 0 赞」
+		// 和「集合丢了」是同一个状态。取舍是宁可让刚归零的计数滞后一个物化
+		// 周期，也不能把有赞的视频刷成 0。
+		if n, err := exists[i].Result(); err != nil || n == 0 {
+			continue
+		}
+		n, err := counts[i].Result()
 		if err != nil {
-			continue // 保留数据库里的值
+			continue
 		}
 		items[i].LikeCount = n
 	}

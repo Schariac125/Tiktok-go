@@ -18,14 +18,17 @@ import (
 
 type Materializer struct {
 	redis    *redis.Redis
+	likes    model.UserLikeModel
 	comments model.CommentModel
 	videos   videoservice.VideoService
 	interval time.Duration
 }
 
-func NewMaterializer(r *redis.Redis, comments model.CommentModel, videos videoservice.VideoService) *Materializer {
+func NewMaterializer(r *redis.Redis, likes model.UserLikeModel,
+	comments model.CommentModel, videos videoservice.VideoService) *Materializer {
 	return &Materializer{
 		redis:    r,
+		likes:    likes,
 		comments: comments,
 		videos:   videos,
 		interval: constant.LikeMaterializeInterval,
@@ -99,6 +102,14 @@ func (m *Materializer) flush(ctx context.Context, targetType uint64) error {
 			// 脏标记本身坏了，移除掉，否则每轮都要重新解析一次
 			logx.Errorf("移除损坏的点赞脏标记 %q: %v", s, err)
 			done = append(done, s)
+			continue
+		}
+
+		// 集合不存在时 SCARD 返回 0 且不报错。若不先重建就直接写回，
+		// 会把数据库里本来正确的副本抹成 0——比读路径显示 0 更严重，
+		// 因为那是把持久数据改坏。
+		if err := EnsureSetLoaded(ctx, m.redis, m.likes, targetType, targetId); err != nil {
+			logx.Errorf("重建点赞集合 %d/%d 失败: %v", targetType, targetId, err)
 			continue
 		}
 
