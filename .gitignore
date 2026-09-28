@@ -27,3 +27,4 @@ docker-compose.override.yml
 .env
 # 填了真实凭据的配置副本，例如 deploy/gateway.local.yaml
 *.local.yaml
+shenren.md
