@@ -6,6 +6,14 @@ Etcd:
   - etcd:2379
   Key: user.rpc
 
+# 日志：容器只挂了配置文件、没挂日志卷，所以写 stdout 交给 docker 收集。
+# 改成 Mode: file 的话日志会落在容器内，docker compose logs 看不到，
+# 且容器重建即丢失。
+Log:
+  Mode: console
+  Encoding: json
+  Level: info
+
 MySQL:
   DataSource: root:${MYSQL_ROOT_PASSWORD}@tcp(mysql:3306)/tiktok?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
 

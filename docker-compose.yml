@@ -1,11 +1,5 @@
 name: tiktok-go
 
-# 中间件端口默认只绑环回（127.0.0.1），不对局域网或公网开放。
-# 服务之间走 compose 网络用服务名互通，不经过这些端口；只有「在宿主机上跑服务」
-# 的本地开发方式需要它们，而那种方式访问的也是 127.0.0.1。
-# 例外：宿主机与容器混跑时，容器要经宿主机连 broker，这时把 BIND_ADDR 设成 0.0.0.0。
-# 网关的 8888 不在此列——它是唯一对外的入口，始终绑 0.0.0.0。
-
 x-service-env: &service-env
   MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?未设置，请先复制 .env.example 为 .env}
   JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?未设置，请先复制 .env.example 为 .env}
@@ -13,11 +7,18 @@ x-service-env: &service-env
   OSS_ACCESS_KEY_ID: ${OSS_ACCESS_KEY_ID:-}
   OSS_ACCESS_KEY_SECRET: ${OSS_ACCESS_KEY_SECRET:-}
 
+x-service-logging: &service-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   etcd:
     image: quay.io/coreos/etcd:v3.5.17
     container_name: tiktok-etcd
     restart: unless-stopped
+    logging: *service-logging
     ports:
       - "${BIND_ADDR:-127.0.0.1}:2379:2379" # 客户端通信，服务注册与发现
       - "${BIND_ADDR:-127.0.0.1}:2380:2380" # 节点间通信
@@ -39,6 +40,7 @@ services:
     image: mysql:8.0
     container_name: mysql8
     restart: unless-stopped
+    logging: *service-logging
     ports:
       - "${BIND_ADDR:-127.0.0.1}:13306:3306"
     environment:
@@ -49,9 +51,6 @@ services:
       - --default-time-zone=+08:00
     volumes:
       - mysql_data:/var/lib/mysql
-      # 首次启动（数据目录为空）时官方镜像会建好 MYSQL_DATABASE 并执行这里的 .sql，
-      # 库表自动就绪；卷里已有数据则整段跳过，所以后续加迁移仍需手工执行。
-      # 四个文件无外键，建表顺序无关。
       - ./migration:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysqladmin ping -h 127.0.0.1 -uroot"]
@@ -64,6 +63,7 @@ services:
     image: redis:7-alpine
     container_name: tiktok-redis
     restart: unless-stopped
+    logging: *service-logging
     ports:
       - "${BIND_ADDR:-127.0.0.1}:6379:6379"
     volumes:
@@ -78,6 +78,7 @@ services:
     image: apache/rocketmq:4.9.7
     container_name: tiktok-rocketmq-namesrv
     restart: unless-stopped
+    logging: *service-logging
     ports:
       - "${BIND_ADDR:-127.0.0.1}:9876:9876"
     command: sh mqnamesrv
@@ -92,6 +93,7 @@ services:
     image: apache/rocketmq:4.9.7
     container_name: tiktok-rocketmq-broker
     restart: unless-stopped
+    logging: *service-logging
     depends_on:
       rocketmq-namesrv:
         condition: service_healthy
@@ -100,23 +102,11 @@ services:
       - "${BIND_ADDR:-127.0.0.1}:10909:10909" # VIP 通道
       - "${BIND_ADDR:-127.0.0.1}:10912:10912" # 主从同步（当前单机，预留）
     environment:
-      # broker 注册到 NameServer 的地址，客户端据此连它。必须显式设置——
-      # 三种运行方式要的值不同，给默认值只会让部署静默用错：
-      #   服务全在宿主机上（本地开发）  127.0.0.1
-      #   服务全在容器里（服务器部署）  rocketmq-broker
-      #   宿主机与容器混跑              host.docker.internal（另需 make rocketmq-hosts）
       ROCKETMQ_BROKER_IP: ${ROCKETMQ_BROKER_IP:?未设置，见 .env.example}
-      # 镜像默认按机器内存自动推算堆（常见 8g），开发环境给个小值即可。
-      # JAVA_OPT_EXT 拼在自动推算的 -Xms/-Xmx 之后，所以这里的值生效。
       JAVA_OPT_EXT: "-Xms512m -Xmx512m -Xmn256m"
     volumes:
-      # 不能挂到 /home/rocketmq/conf：该目录在镜像里不存在，Docker 会以 root
-      # 建出来，而容器以 uid 3000 运行，写不进去。挂到 /etc 下只读，配置在 /tmp 生成。
       - ./deploy/rocketmq/broker.conf:/etc/rocketmq/broker-base.conf:ro
       - rocketmq_store:/home/rocketmq/store
-    # 以 root 启动只为两件事：store 卷由 docker 建出来是 root 属主，需要 chown 给
-    # uid 3000；以及写 /tmp 下的配置。做完立刻 su 回 rocketmq 跑 broker，
-    # 不让 Java 进程以 root 运行。
     user: root
     entrypoint: ["/bin/bash", "-c"]
     command:
@@ -135,9 +125,7 @@ services:
       retries: 12
       start_period: 30s
 
-  # ---- 业务服务 ----
-  # 配置从 deploy/ 挂载：容器内中间件地址走 compose 服务名，与本地开发的 etc/*.yaml 不同。
-  # rpc 服务不对外暴露端口，只经 etcd 服务发现被网关调用。
+  
 
   user-rpc:
     build:
@@ -146,6 +134,7 @@ services:
     image: tiktok-go/user-rpc:latest
     container_name: tiktok-user-rpc
     restart: unless-stopped
+    logging: *service-logging
     depends_on:
       etcd:
         condition: service_healthy
@@ -170,6 +159,7 @@ services:
     image: tiktok-go/video-rpc:latest
     container_name: tiktok-video-rpc
     restart: unless-stopped
+    logging: *service-logging
     depends_on:
       etcd:
         condition: service_healthy
@@ -194,6 +184,7 @@ services:
     image: tiktok-go/interaction-rpc:latest
     container_name: tiktok-interaction-rpc
     restart: unless-stopped
+    logging: *service-logging
     depends_on:
       etcd:
         condition: service_healthy
@@ -223,6 +214,7 @@ services:
     image: tiktok-go/social-rpc:latest
     container_name: tiktok-social-rpc
     restart: unless-stopped
+    logging: *service-logging
     depends_on:
       etcd:
         condition: service_healthy
@@ -250,6 +242,7 @@ services:
     image: tiktok-go/gateway:latest
     container_name: tiktok-gateway
     restart: unless-stopped
+    logging: *service-logging
     ports:
       - "8888:8888"
     # 四个 rpc 都就绪（端口通）后再起，避免启动时 etcd 里还没注册记录
@@ -273,9 +266,6 @@ services:
       start_period: 10s
 
 volumes:
-  # 固定卷名，不加项目名前缀，便于在 docker volume ls 里一眼认出。
-  # 不标 external：不存在时 compose 自动创建，省掉手工建卷这一步。
-  # 代价是 docker compose down -v 会连数据一起删，别带 -v。
   etcd_data:
     name: etcd_data
   mysql_data:

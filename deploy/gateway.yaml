@@ -7,6 +7,14 @@ Port: 8888
 # 视频投稿的大文件由 video_auth.api 的 @server(maxBytes) 单独放开
 MaxBytes: 8388608 # 8MB
 
+# 日志：容器只挂了配置文件、没挂日志卷，所以写 stdout 交给 docker 收集。
+# 改成 Mode: file 的话日志会落在容器内，docker compose logs 看不到，
+# 且容器重建即丢失。
+Log:
+  Mode: console
+  Encoding: json
+  Level: info
+
 UserRpc:
   Etcd:
     Hosts:
