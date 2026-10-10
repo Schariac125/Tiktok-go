@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/zeromicro/go-zero/rest/httpx"
-		"tiktok-go/app/gateway/api/internal/logic/user"
+	"tiktok-go/app/gateway/api/internal/logic/user"
 	"tiktok-go/app/gateway/api/internal/svc"
 	"tiktok-go/app/gateway/api/internal/types"
 )

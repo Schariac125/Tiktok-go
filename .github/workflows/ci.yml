@@ -32,10 +32,10 @@ jobs:
       - name: Verify gofumpt
         run: |
           echo "refer to https://github.com/mvdan/gofumpt for detailed info" &&
-          GO111MODULE=on go install mvdan.cc/gofumpt@v0.4.0 &&
-          make fmt && git add pkg cmd &&
+          GO111MODULE=on go install mvdan.cc/gofumpt@v0.12.0 &&
+          make fmt && git add app pkg &&
           git diff --cached --exit-code ||
-            (echo 'Please run "make fmt" to verify fmt' && exit 1)
+            (echo 'Code is not formatted, please run "make fmt" locally and commit' && exit 1)
   
   vet:
     name: vet
@@ -50,7 +50,7 @@ jobs:
       
       - name: Verify govet
         run: |
-          make vet && git add pkg cmd &&
+          make vet && git add app pkg &&
           git diff --cached --exit-code ||
             (echo 'Please run "make vet" to verify govet' && exit 1)
   

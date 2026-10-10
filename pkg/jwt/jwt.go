@@ -15,9 +15,9 @@ var (
 
 // Claims 自定义声明，同时用于 Access 与 Refresh token。
 type Claims struct {
-	UserId   int64  `json:"user_id"`             // 用户 id
-	Username string `json:"username"`            // 用户名
-	TokenUse string `json:"token_use"`           // token 用途：access / refresh
+	UserId   int64  `json:"user_id"`   // 用户 id
+	Username string `json:"username"`  // 用户名
+	TokenUse string `json:"token_use"` // token 用途：access / refresh
 	jwt.RegisteredClaims
 }
 

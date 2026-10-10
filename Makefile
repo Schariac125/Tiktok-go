@@ -35,6 +35,7 @@ BIN_DIR     := bin
 
 .DEFAULT_GOAL := generate
 .PHONY: generate api-build rpc-build model-build build \
+        fmt vet \
         image-build \
         infra-up infra-down infra-logs \
         rocketmq-hosts rocketmq-check \
@@ -76,6 +77,21 @@ build:
 		if [ ! -d app/$$m/rpc ]; then echo "跳过 $$m-rpc：app/$$m/rpc 不存在，请先 make rpc-build"; continue; fi; \
 		go build -o $(BIN_DIR)/$$m-rpc ./app/$$m/rpc || exit 1; \
 	done
+
+# 代码格式化。CI 里装的是 gofumpt（见 .github/workflows/ci.yml），本地没装就退回 gofmt。
+# 安装：go install mvdan.cc/gofumpt@v0.12.0
+fmt:
+	@if command -v gofumpt >/dev/null 2>&1; then \
+		echo ">>> gofumpt -l -w ."; \
+		gofumpt -l -w .; \
+	else \
+		echo ">>> 未找到 gofumpt，退回 gofmt -l -w ."; \
+		gofmt -l -w .; \
+	fi
+
+# 静态检查，只报问题不改代码
+vet:
+	go vet ./...
 
 # 构建各服务镜像。Dockerfile 在服务目录下，但构建 context 是项目根（go.mod 在那里）
 image-build:

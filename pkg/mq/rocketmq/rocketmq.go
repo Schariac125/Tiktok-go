@@ -162,7 +162,8 @@ func (s *subscriber) Subscribe(ctx context.Context, topic string, h mq.Handler) 
 
 	// 顺序消费下一次只投一条，但仍按切片处理，避免依赖批大小恰好为 1
 	err = c.Subscribe(topic, consumer.MessageSelector{}, func(ctx context.Context,
-		msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
+		msgs ...*primitive.MessageExt,
+	) (consumer.ConsumeResult, error) {
 		for _, m := range msgs {
 			if err := h(ctx, m.Body); err != nil {
 				// 返回 error 让 broker 稍后重投这条，重试超限后进死信队列

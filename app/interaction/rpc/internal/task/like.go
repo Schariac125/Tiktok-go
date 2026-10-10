@@ -73,8 +73,8 @@ func likeKey(userId, targetType, targetId uint64) string {
 
 // handle 处理一条点赞变更，做两件事：
 //
-//	1. 落 user_like 表 —— 唯一持久真相
-//	2. 改 Redis 点赞集合 —— 计数的权威来源，计数 = SCARD
+//  1. 落 user_like 表 —— 唯一持久真相
+//  2. 改 Redis 点赞集合 —— 计数的权威来源，计数 = SCARD
 //
 // 两步各自幂等，且不能互相短路：MQ 是 at-least-once，上一次可能正是卡在第 2 步
 // 才重投的。若因为第 1 步「没真的改」就跳过第 2 步，那次失败就永远补不上了。
@@ -126,8 +126,8 @@ func (h *likeHandler) handle(ctx context.Context, body []byte) error {
 // 调用方若刚写过 user_like，重建出来的集合已经包含本次变更，
 // 随后的 SADD/SREM 会返回 0，这是正常的。
 func EnsureSetLoaded(ctx context.Context, r *redis.Redis,
-	likes model.UserLikeModel, targetType, targetId uint64) error {
-
+	likes model.UserLikeModel, targetType, targetId uint64,
+) error {
 	key := constant.LikeSetKey(targetType, targetId)
 
 	exists, err := r.ExistsCtx(ctx, key)

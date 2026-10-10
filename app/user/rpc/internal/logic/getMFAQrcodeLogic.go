@@ -43,9 +43,9 @@ func (l *GetMFAQrcodeLogic) GetMFAQrcode(in *user.GetMFAQrcodeReq) (*user.GetMFA
 	}
 
 	return &user.GetMFAQrcodeResp{
-		Base:    toStatus(errno.OK),
-		Secret:  secret,
-		Qrcode:  qrcode,
+		Base:   toStatus(errno.OK),
+		Secret: secret,
+		Qrcode: qrcode,
 	}, nil
 }
 

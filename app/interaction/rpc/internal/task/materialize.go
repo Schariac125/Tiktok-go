@@ -25,7 +25,8 @@ type Materializer struct {
 }
 
 func NewMaterializer(r *redis.Redis, likes model.UserLikeModel,
-	comments model.CommentModel, videos videoservice.VideoService) *Materializer {
+	comments model.CommentModel, videos videoservice.VideoService,
+) *Materializer {
 	return &Materializer{
 		redis:    r,
 		likes:    likes,

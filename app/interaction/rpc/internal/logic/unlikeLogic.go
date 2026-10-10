@@ -3,9 +3,9 @@ package logic
 import (
 	"context"
 
+	"tiktok-go/app/interaction/rpc/interaction"
 	"tiktok-go/app/interaction/rpc/internal/svc"
 	"tiktok-go/app/interaction/rpc/internal/task"
-	"tiktok-go/app/interaction/rpc/interaction"
 	"tiktok-go/pkg/errno"
 
 	"github.com/zeromicro/go-zero/core/logx"

@@ -3,8 +3,8 @@ package logic
 import (
 	"context"
 
-	"tiktok-go/app/interaction/rpc/internal/svc"
 	"tiktok-go/app/interaction/rpc/interaction"
+	"tiktok-go/app/interaction/rpc/internal/svc"
 	"tiktok-go/app/interaction/rpc/model"
 	"tiktok-go/pkg/errno"
 	"tiktok-go/pkg/utils"

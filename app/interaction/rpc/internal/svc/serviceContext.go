@@ -62,8 +62,8 @@ func NewServiceContext(ctx context.Context, c config.Config) *ServiceContext {
 
 // startLikeQueue 建起点赞队列的生产者、消费者，以及计数的物化任务。
 func (s *ServiceContext) startLikeQueue(ctx context.Context, nameServer []string,
-	likes model.UserLikeModel, comments model.CommentModel, videos videoservice.VideoService) {
-
+	likes model.UserLikeModel, comments model.CommentModel, videos videoservice.VideoService,
+) {
 	cfg := rocketmq.Config{
 		NameServer:        nameServer,
 		Group:             constant.LikeGroup,

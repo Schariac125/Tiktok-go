@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"tiktok-go/app/interaction/rpc/internal/svc"
 	"tiktok-go/app/interaction/rpc/interaction"
+	"tiktok-go/app/interaction/rpc/internal/svc"
 	"tiktok-go/app/interaction/rpc/model"
 	"tiktok-go/pkg/constant"
 	"tiktok-go/pkg/errno"
