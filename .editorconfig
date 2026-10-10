@@ -1,0 +1,26 @@
+root = true
+
+# 适用于所有文件的风格规定
+[*]
+charset = utf-8
+end_of_line = lf
+# linux与macOS下用lf,windows常见的是crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.go]
+indent_style = tab
+# 规定了该使用什么样的缩进，这里规定的就是tab
+indent_size = 4
+# 规定了该缩进的格数
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[*.json]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false

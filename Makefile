@@ -43,16 +43,9 @@ BIN_DIR     := bin
 # 生成全部代码：网关 + 各模块 rpc
 generate: api-build rpc-build
 
-# 生成网关代码。
-# 各模块的 .api 用 group 属性声明分组，handler/logic 会落到 internal/handler/<group>
-# 与 internal/logic/<group> 子包，无需生成后再搬目录。
-# 已存在的文件（config、service_context、以及各 handler/logic 业务实现）不会被覆盖。
 api-build:
 	goctl api go --api $(GATEWAY_API) --dir $(GATEWAY_DIR) --style $(API_STYLE)
 
-# 生成各模块 rpc 代码。
-# proto 里的 go_package 为 "./<模块>"，因此 pb 文件落在 app/<模块>/rpc/<模块>。
-# 已实现的 logic、model、etc 配置不会被覆盖。
 rpc-build:
 	@for m in $(MODULES); do \
 		if [ ! -f api/$$m/$$m.proto ]; then echo "跳过 $$m：缺少 api/$$m/$$m.proto"; continue; fi; \
@@ -66,8 +59,6 @@ rpc-build:
 			--style $(RPC_STYLE) || exit 1; \
 	done
 
-# 从 migration/<模块>.sql 生成带 redis 缓存的 model。
-# 生成 <模块>_model_gen.go / vars.go，手写的 <模块>_model.go 不会被覆盖。
 model-build:
 	@for m in $(MODULES); do \
 		if [ ! -f migration/$$m.sql ]; then echo "跳过 $$m：缺少 migration/$$m.sql"; continue; fi; \
@@ -100,25 +91,11 @@ image-build:
 infra-up:
 	docker compose up -d
 
-# 让宿主机也能解析 host.docker.internal，指向 127.0.0.1。
-#
-# 只有「宿主机与容器混跑」才需要：这时 broker 注册的是 host.docker.internal，
-# 容器侧由 Docker Desktop 解析，宿主机侧要这一行。同时 BIND_ADDR 得设成 0.0.0.0，
-# 否则端口只绑环回，容器够不着。
-#
-# 纯本地开发（服务都在宿主机上）用 ROCKETMQ_BROKER_IP=127.0.0.1，不需要这一步。
 rocketmq-hosts:
 	@grep -q "host.docker.internal" /etc/hosts \
 		&& echo "已存在，跳过" \
 		|| echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
 
-# 查看 broker 注册到 NameServer 的地址；客户端连不上时先看这里。
-#
-# 在独立的临时容器里跑，不在 broker 容器内跑：broker 注册的是
-# host.docker.internal，从它自己容器里连这个地址会绕回宿主机的 published
-# 端口再 DNAT 回自身，形成 hairpin 而失败——真实客户端（interaction-rpc）
-# 是第三方，不受影响，所以这里也用一个第三方容器来模拟。
-rocketmq-check:
 	@docker run --rm --network tiktok-go_default --entrypoint /bin/bash apache/rocketmq:4.9.7 \
 		-c 'ROCKETMQ_BIN=$$(echo /home/rocketmq/rocketmq-*/bin); \
 		    sh $$ROCKETMQ_BIN/mqadmin clusterList -n rocketmq-namesrv:9876'
