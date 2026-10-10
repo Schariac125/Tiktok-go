@@ -13,7 +13,7 @@ on:
 permissions:
   contents: read
 
-job:
+jobs:
   fmt:
     name: Format
     runs-on: ubuntu-22.04
